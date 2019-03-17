@@ -7,7 +7,7 @@ libcarrow.a: carrow.o
 	ar r $@ $^
 
 %.o: %.cc
-	g++ -I../arrow/cpp/src -O2 -o $@ -c $^
+	g++ -O2 -o $@ -c $^
 
 clean:
 	rm -f *.o *.a
