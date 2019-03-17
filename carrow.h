@@ -13,6 +13,10 @@ const char *field_name(void *field);
 int field_dtype(void *vp);
 void field_free(void *vp);
 
+void *schema_new();
+void schema_add_field(void *sp, void *fp);
+void schema_free(void *vp);
+
 #ifdef __cplusplus
 }
 #endif // extern "C"

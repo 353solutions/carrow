@@ -65,3 +65,26 @@ func (f *Field) Name() string {
 func (f *Field) DType() DType {
 	return C.field_dtype(f.ptr)
 }
+
+// Schema is table schema
+type Schema struct {
+	ptr unsafe.Pointer
+}
+
+// NewSchema creates a new schema
+func NewSchema(fields []Field) (*Schema, error) {
+	ptr := C.schema_new()
+	if ptr == nil {
+		return nil, fmt.Errorf("can't create schema")
+	}
+	for _, field := range fields {
+		C.schema_add_field(ptr, field.ptr)
+	}
+
+	schema := &Schema{ptr}
+	runtime.SetFinalizer(schema, func() {
+		C.schema_free(schema.ptr)
+	})
+
+	return schema, nil
+}
