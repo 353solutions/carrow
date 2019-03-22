@@ -1,0 +1,1 @@
+docker run -v $PWD:/home/carrow -it --workdir=/home/carrow/ rvernica/apache-arrow
