@@ -2,16 +2,17 @@ package carrow
 
 // #cgo pkg-config: arrow
 // #cgo LDFLAGS: -lcarrow -L.
-
-// #include "carrow.h"
+// #cgo CFLAGS: -I/opt/arrow/include
+/* 
+	#include "carrow.h"
+   	#include <stdlib.h>
+*/
 import (
 	"fmt"
 	"runtime"
 	"unsafe"
 )
 
-// #include <stdlib.h>
-// #include "carrow.h"
 import "C"
 
 // DType is a data type
