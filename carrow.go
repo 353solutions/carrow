@@ -6,13 +6,12 @@ package carrow
 	#include "carrow.h"
    	#include <stdlib.h>
 */
+import "C"
 import (
 	"fmt"
 	"runtime"
 	"unsafe"
 )
-
-import "C"
 
 // DType is a data type
 type DType int
