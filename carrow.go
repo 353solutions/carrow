@@ -2,7 +2,6 @@ package carrow
 
 // #cgo pkg-config: arrow
 // #cgo LDFLAGS: -lcarrow -L.
-// #cgo CFLAGS: -I/opt/arrow/include
 /* 
 	#include "carrow.h"
    	#include <stdlib.h>
