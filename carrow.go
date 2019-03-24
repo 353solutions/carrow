@@ -39,7 +39,7 @@ type Field struct {
 // NewField returns a new Field
 func NewField(name string, dtype C.int) (*Field, error) {
 	cName := C.CString(name)
-	//defer func() { C.free(cName) }()
+	defer func() { C.free(unsafe.Pointer(cName)) }()
 
 	ptr := C.field_new(cName, dtype)
 	if ptr == nil {
@@ -50,7 +50,7 @@ func NewField(name string, dtype C.int) (*Field, error) {
 
 	field := Field{ptr}
 	runtime.SetFinalizer(field, func() {
-		C.field_free(field.ptr)
+		C.field_free(unsafe.Pointer(field.ptr))
 	})
 	return &field,nil
 }
