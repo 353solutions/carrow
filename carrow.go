@@ -9,7 +9,6 @@ package carrow
 import "C"
 import (
 	"fmt"
-	"runtime"
 	"unsafe"
 )
 
@@ -49,9 +48,9 @@ func NewField(name string, dtype C.int) (*Field, error) {
 	}
 
 	field := Field{ptr}
-	runtime.SetFinalizer(field, func() {
-		C.field_free(unsafe.Pointer(field.ptr))
-	})
+	//runtime.SetFinalizer(field, func() {
+	//	//C.field_free(ptr)
+	//})
 	return &field,nil
 }
 
@@ -81,9 +80,9 @@ func NewSchema(fields []Field) (*Schema, error) {
 	}
 
 	schema := &Schema{ptr}
-	runtime.SetFinalizer(schema, func() {
-		C.schema_free(schema.ptr)
-	})
+	//runtime.SetFinalizer(schema, func() {
+	//	C.schema_free(schema.ptr)
+	//})
 
 	return schema, nil
 }
