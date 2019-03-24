@@ -14,15 +14,13 @@ import (
 )
 
 // DType is a data type
-type DType int
+type DType C.int
 
 // Supported data types
-const (
-	IntegerType DType = C.INTEGER_DTYPE
-	FloatType   DType = C.FLOAT_DTYPE
-)
+	var IntegerType C.int = C.NC_INTEGER_DTYPE
+	var FloatType   C.int = C.NC_FLOAT_DTYPE
 
-func (t DType) String() string {
+func (t C.int) String() string {
 	switch t {
 	case IntegerType:
 		return "int64"
@@ -39,13 +37,14 @@ type Field struct {
 }
 
 // NewField returns a new Field
-func NewField(name string, dtype DType) (*Field, error) {
+func NewField(name string, dtype C.int) (*Field, error) {
 	cName := C.CString(name)
-	defer func() { C.free(cName) }()
+	//defer func() { C.free(cName) }()
 
 	ptr := C.field_new(cName, dtype)
 	if ptr == nil {
-		return nil, fmt.Errorf("can't create field from %s:s", name, dtype)
+		//return nil, fmt.Errorf("can't create field from %s:s", name, dtype)
+		return nil, fmt.Errorf("can't create field")
 
 	}
 
@@ -53,6 +52,7 @@ func NewField(name string, dtype DType) (*Field, error) {
 	runtime.SetFinalizer(field, func() {
 		C.field_free(field.ptr)
 	})
+	return &field,nil
 }
 
 // Name returns the field name
@@ -61,7 +61,7 @@ func (f *Field) Name() string {
 }
 
 // DType returns the field data type
-func (f *Field) DType() DType {
+func (f *Field) DType() C.int {
 	return C.field_dtype(f.ptr)
 }
 

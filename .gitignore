@@ -2,3 +2,4 @@ carrow
 *.o
 *.a
 .vscode
+.idea

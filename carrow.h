@@ -8,6 +8,9 @@ extern "C" {
 extern const int INTEGER_DTYPE;
 extern const int FLOAT_DTYPE;
 
+extern int NC_INTEGER_DTYPE;
+extern int NC_FLOAT_DTYPE;
+
 void *field_new(char *name, int type);
 const char *field_name(void *field);
 int field_dtype(void *vp);

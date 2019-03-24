@@ -11,6 +11,8 @@ extern "C" {
 
 const int INTEGER_DTYPE = arrow::Type::INT64;
 const int FLOAT_DTYPE = arrow::Type::DOUBLE;
+int NC_INTEGER_DTYPE = INTEGER_DTYPE;
+int NC_FLOAT_DTYPE = FLOAT_DTYPE;
 
 
 void *field_new(char *name, int dtype) {
