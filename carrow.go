@@ -10,6 +10,8 @@ package carrow
 import "C"
 import (
 	"fmt"
+	"runtime"
+
 	//	"runtime"
 	"unsafe"
 )
@@ -50,11 +52,10 @@ func NewField(name string, dtype DType) (*Field, error) {
 	}
 
 	field := &Field{ptr}
-	/* FIXME
+
 	runtime.SetFinalizer(field, func(f *Field) {
 		C.field_free(f.ptr)
 	})
-	*/
 	return field, nil
 }
 
@@ -89,11 +90,9 @@ func NewSchema(fields []*Field) (*Schema, error) {
 		return nil, fmt.Errorf("can't create schema")
 	}
 	schema := &Schema{ptr}
-	/* FIXME
 	runtime.SetFinalizer(schema, func(s *Schema) {
 		C.schema_free(schema.ptr)
 	})
-	*/
 
 	return schema, nil
 }
