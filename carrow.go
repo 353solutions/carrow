@@ -19,11 +19,11 @@ type DType C.int
 
 // Supported data types
 var (
-	IntegerType DType = C.INTEGER_DTYPE
-	FloatType   DType = C.FLOAT_DTYPE
+	IntegerType = DType(C.INTEGER_DTYPE)
+	FloatType   = DType(C.FLOAT_DTYPE)
 )
 
-func (dt Dtype) String() string {
+func (dt DType) String() string {
 	switch dt {
 	case IntegerType:
 		return "int64"
@@ -44,7 +44,7 @@ func NewField(name string, dtype DType) (*Field, error) {
 	cName := C.CString(name)
 	defer func() { C.free(unsafe.Pointer(cName)) }()
 
-	ptr := C.field_new(cName, dtype)
+	ptr := C.field_new(cName, C.int(dtype))
 	if ptr == nil {
 		return nil, fmt.Errorf("can't create field from %s:s", name, dtype)
 	}
@@ -63,7 +63,7 @@ func (f *Field) Name() string {
 
 // DType returns the field data type
 func (f *Field) DType() DType {
-	return C.field_dtype(f.ptr)
+	return DType(C.field_dtype(f.ptr))
 }
 
 // Schema is table schema
@@ -87,4 +87,19 @@ func NewSchema(fields []Field) (*Schema, error) {
 	})
 
 	return schema, nil
+}
+
+// Array of data
+type Array struct {
+	ptr unsafe.Pointer
+}
+
+// DType returns the array DType
+func (a *Array) DType() DType {
+	return 0 // FIXME
+}
+
+// Len is the length of the array
+func (a *Array) Len() int {
+	return 0 // FIXME
 }
