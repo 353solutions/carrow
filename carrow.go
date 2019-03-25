@@ -50,10 +50,10 @@ func NewField(name string, dtype DType) (*Field, error) {
 	}
 
 	field := &Field{ptr}
-	/*
-		runtime.SetFinalizer(field, func(f *Field) {
-			C.field_free(f.ptr)
-		})
+	/* FIXME
+	runtime.SetFinalizer(field, func(f *Field) {
+		C.field_free(f.ptr)
+	})
 	*/
 	return field, nil
 }
@@ -77,6 +77,7 @@ type Schema struct {
 func NewSchema(fields []*Field) (*Schema, error) {
 	cf := C.fields_new()
 	defer func() {
+		// FIXME
 		//		C.fields_free(cf)
 	}()
 
@@ -88,10 +89,10 @@ func NewSchema(fields []*Field) (*Schema, error) {
 		return nil, fmt.Errorf("can't create schema")
 	}
 	schema := &Schema{ptr}
-	/*
-		runtime.SetFinalizer(schema, func(s *Schema) {
-			C.schema_free(schema.ptr)
-		})
+	/* FIXME
+	runtime.SetFinalizer(schema, func(s *Schema) {
+		C.schema_free(schema.ptr)
+	})
 	*/
 
 	return schema, nil
@@ -185,6 +186,7 @@ func NewTableFromColumns(columns []*Column) (*Table, error) {
 	fields := make([]*Field, len(columns))
 	cptr := C.columns_new()
 	defer func() {
+		// FIXME
 		// C.columns_free(cptr)
 	}()
 
@@ -201,6 +203,7 @@ func NewTableFromColumns(columns []*Column) (*Table, error) {
 	table := &Table{ptr}
 
 	if err := table.validate(); err != nil {
+		// FIXME
 		// C.table_free(ptr)
 		return nil, err
 	}
