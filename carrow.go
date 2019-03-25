@@ -1,10 +1,11 @@
 package carrow
 
-// #cgo pkg-config: arrow
-// #cgo LDFLAGS: -lcarrow -L.
-/* 
-	#include "carrow.h"
-   	#include <stdlib.h>
+/*
+#cgo pkg-config: arrow
+#cgo LDFLAGS: -lcarrow -L.
+
+#include "carrow.h"
+#include <stdlib.h>
 */
 import "C"
 import (
@@ -17,11 +18,13 @@ import (
 type DType C.int
 
 // Supported data types
-	var IntegerType C.int = C.NC_INTEGER_DTYPE
-	var FloatType   C.int = C.NC_FLOAT_DTYPE
+var (
+	IntegerType DType = C.INTEGER_DTYPE
+	FloatType   DType = C.FLOAT_DTYPE
+)
 
-func (t C.int) String() string {
-	switch t {
+func (dt Dtype) String() string {
+	switch dt {
 	case IntegerType:
 		return "int64"
 	case FloatType:
@@ -37,22 +40,20 @@ type Field struct {
 }
 
 // NewField returns a new Field
-func NewField(name string, dtype C.int) (*Field, error) {
+func NewField(name string, dtype DType) (*Field, error) {
 	cName := C.CString(name)
 	defer func() { C.free(unsafe.Pointer(cName)) }()
 
 	ptr := C.field_new(cName, dtype)
 	if ptr == nil {
-		//return nil, fmt.Errorf("can't create field from %s:s", name, dtype)
-		return nil, fmt.Errorf("can't create field")
-
+		return nil, fmt.Errorf("can't create field from %s:s", name, dtype)
 	}
 
 	field := &Field{ptr}
 	runtime.SetFinalizer(field, func(f *Field) {
 		C.field_free(f.ptr)
 	})
-	return field,nil
+	return field, nil
 }
 
 // Name returns the field name
@@ -61,7 +62,7 @@ func (f *Field) Name() string {
 }
 
 // DType returns the field data type
-func (f *Field) DType() C.int {
+func (f *Field) DType() DType {
 	return C.field_dtype(f.ptr)
 }
 
