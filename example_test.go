@@ -44,12 +44,10 @@ func Example() {
 		return
 	}
 
-	tbl := carrow.NewTable(nil) // Can pass []*carrow.Column
-	tbl.Append(intCol)
-	tbl.Append(floatCol)
-
-	if err := tbl.Validate(); err != nil {
-		fmt.Printf("table validate error: %s", err)
+	cols := []*Column{intCol, floatCol}
+	tbl, err := carrow.NewTable(cols)
+	if err != nil {
+		fmt.Printf("table creation error: %s", err)
 		return
 	}
 }

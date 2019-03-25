@@ -73,14 +73,14 @@ type Schema struct {
 
 // NewSchema creates a new schema
 func NewSchema(fields []Field) (*Schema, error) {
-	ptr := C.schema_new()
+	cf := C.fields_new()
+	for _, f := range fields {
+		C.fields_append(cf, f.ptr)
+	}
+	ptr := C.schema_new(cf)
 	if ptr == nil {
 		return nil, fmt.Errorf("can't create schema")
 	}
-	for _, field := range fields {
-		C.schema_add_field(ptr, field.ptr)
-	}
-
 	schema := &Schema{ptr}
 	runtime.SetFinalizer(schema, func(s *Schema) {
 		C.schema_free(schema.ptr)
@@ -147,4 +147,15 @@ func builderFinish(ptr unsafe.Pointer) (*Array, error) {
 // Array is arrow array
 type Array struct {
 	ptr unsafe.Pointer
+}
+
+// Column is an arrow colum
+type Column struct {
+	ptr unsafe.Pointer
+}
+
+// NewColumn returns a new column
+func NewColumn(field Field, arr Array) *Column {
+	ptr := C.column_new(field.ptr, arr.ptr)
+	return &Column{ptr}
 }

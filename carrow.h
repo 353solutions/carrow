@@ -13,8 +13,11 @@ const char *field_name(void *field);
 int field_dtype(void *vp);
 void field_free(void *vp);
 
-void *schema_new();
-void schema_add_field(void *sp, void *fp);
+void *fields_new();
+void fields_append(void *vp, void *fp);
+void fields_free(void *vp);
+
+void *schema_new(void *vp);
 void schema_free(void *vp);
 
 void *array_builder_new(int dtype);
@@ -23,8 +26,13 @@ void array_builder_append_float(void *vp, double value);
 typedef struct {
   const char *err;
   void *arr;
-} finish_result;
-finish_result array_builder_finish(void *vp);
+} finish_result_t;
+finish_result_t array_builder_finish(void *vp);
+
+void array_free(void *vp);
+
+void *column_new(void *field, void *array);
+void column_free(void *vp);
 
 #ifdef __cplusplus
 }

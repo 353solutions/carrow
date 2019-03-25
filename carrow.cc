@@ -37,23 +37,33 @@ int field_dtype(void *vp) {
 }
 
 void field_free(void *vp) {
+  if (vp == NULL) {
+    return;
+  }
   auto field = (arrow::Field *)vp;
   delete field;
 }
 
-void *schema_new() {
-  std::vector<std::shared_ptr<arrow::Field>> fields;
-  auto schema = new arrow::Schema(fields);
-  return (void *)schema;
+void *fields_new() { return new std::vector<std::shared_ptr<arrow::Field>>(); }
+
+void fields_append(void *vp, void *fp) {
+  auto fields = (std::vector<std::shared_ptr<arrow::Field>> *)vp;
+  std::shared_ptr<arrow::Field> field((arrow::Field *)fp);
+  fields->push_back(field);
 }
 
-void schema_add_field(void *vp, void *fp) {
-  auto field = (arrow::Field *)fp;
-  auto ptr = std::make_shared<arrow::Field>(*field);
-  /* TODO: Does not work
-  auto schema = (arrow::Schema *)vp;
-  schema->fields().push_back(ptr);
-  */
+void fields_free(void *vp) {
+  if (vp == NULL) {
+    return;
+  }
+  auto fields = (std::vector<std::shared_ptr<arrow::Field>> *)vp;
+  delete fields;
+}
+
+void *schema_new(void *vp) {
+  auto fields = (std::vector<std::shared_ptr<arrow::Field>> *)vp;
+  auto schema = new arrow::Schema(*fields);
+  return (void *)schema;
 }
 
 void schema_free(void *vp) {
@@ -85,12 +95,12 @@ void array_builder_append_float(void *vp, double value) {
   builder->Append(value);
 }
 
-finish_result array_builder_finish(void *vp) {
+finish_result_t array_builder_finish(void *vp) {
   auto builder = (arrow::ArrayBuilder *)vp;
   std::shared_ptr<arrow::Array> out;
   auto status = builder->Finish(&out);
 
-  finish_result res = {NULL, NULL};
+  finish_result_t res = {NULL, NULL};
   if (!status.ok()) {
     res.err = status.ToString().c_str();
   } else {
@@ -99,6 +109,29 @@ finish_result array_builder_finish(void *vp) {
 
   // TODO: Will out delete the underlying array?
   return res;
+}
+
+void array_free(void *vp) {
+  if (vp == NULL) {
+    return;
+  }
+  auto array = (arrow::Array *)vp;
+  delete array;
+}
+
+void *column_new(void *fp, void *ap) {
+  std::shared_ptr<arrow::Field> field((arrow::Field *)fp);
+  std::shared_ptr<arrow::Array> array((arrow::Array *)ap);
+
+  return new arrow::Column(field, array);
+}
+
+void column_free(void *vp) {
+  if (vp == NULL) {
+    return;
+  }
+  auto column = (arrow::Column *)vp;
+  delete column;
 }
 
 #ifdef __cplusplus
