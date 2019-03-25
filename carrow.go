@@ -89,17 +89,50 @@ func NewSchema(fields []Field) (*Schema, error) {
 	return schema, nil
 }
 
-// Array of data
-type Array struct {
+// FloatArrayBuilder used for building float Arrays
+type FloatArrayBuilder struct {
 	ptr unsafe.Pointer
 }
 
-// DType returns the array DType
-func (a *Array) DType() DType {
-	return 0 // FIXME
+// Append appends an integer
+func (b *FloatArrayBuilder) Append(val float64) error {
+	C.array_builder_append_float(b.ptr, C.double(val))
+	return nil
 }
 
-// Len is the length of the array
-func (a *Array) Len() int {
-	return 0 // FIXME
+// Finish creates the array
+func (b *FloatArrayBuilder) Finish() (*Array, error) {
+	return builderFinish(b.ptr)
+}
+
+// IntArrayBuilder used for building integer Arrays
+type IntArrayBuilder struct {
+	ptr unsafe.Pointer
+}
+
+// Append appends an integer
+func (b *IntArrayBuilder) Append(val int) error {
+	C.array_builder_append_int(b.ptr, C.longlong(val))
+	return nil
+}
+
+// Finish creates the array
+func (b *IntArrayBuilder) Finish() (*Array, error) {
+	return builderFinish(b.ptr)
+}
+
+func builderFinish(ptr unsafe.Pointer) (*Array, error) {
+	out := C.array_builder_finish(ptr)
+	if out.err != nil {
+		err := fmt.Errorf(C.GoString(out.err))
+		C.free(unsafe.Pointer(out.err))
+		return nil, err
+	}
+
+	return &Array{out.arr}, nil
+}
+
+// Array is arrow array
+type Array struct {
+	ptr unsafe.Pointer
 }
