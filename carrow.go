@@ -159,9 +159,10 @@ type Column struct {
 }
 
 // NewColumn returns a new column
-func NewColumn(field Field, arr Array) *Column {
+func NewColumn(field *Field, arr *Array) (*Column, error) {
+	// TODO: Check dtypes
 	ptr := C.column_new(field.ptr, arr.ptr)
-	return &Column{ptr}
+	return &Column{ptr}, nil
 }
 
 // Field returns the column field
