@@ -46,7 +46,7 @@ func NewField(name string, dtype DType) (*Field, error) {
 
 	ptr := C.field_new(cName, C.int(dtype))
 	if ptr == nil {
-		return nil, fmt.Errorf("can't create field from %s:s", name, dtype)
+		return nil, fmt.Errorf("can't create field from %s: %s", name, dtype)
 	}
 
 	field := &Field{ptr}
@@ -94,6 +94,12 @@ type FloatArrayBuilder struct {
 	ptr unsafe.Pointer
 }
 
+// NewFloatArrayBuilder returns a new FloatArrayBuilder
+func NewFloatArrayBuilder() *FloatArrayBuilder {
+	ptr := C.array_builder_new(C.int(FloatType))
+	return &FloatArrayBuilder{ptr}
+}
+
 // Append appends an integer
 func (b *FloatArrayBuilder) Append(val float64) error {
 	C.array_builder_append_float(b.ptr, C.double(val))
@@ -108,6 +114,12 @@ func (b *FloatArrayBuilder) Finish() (*Array, error) {
 // IntArrayBuilder used for building integer Arrays
 type IntArrayBuilder struct {
 	ptr unsafe.Pointer
+}
+
+// NewIntArrayBuilder returns a new IntArrayBuilder
+func NewIntArrayBuilder() *IntArrayBuilder {
+	ptr := C.array_builder_new(C.int(IntegerType))
+	return &IntArrayBuilder{ptr}
 }
 
 // Append appends an integer

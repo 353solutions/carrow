@@ -16,4 +16,7 @@ build-docker:
 	docker build . -t carrow:builder
 	docker run -v $(PWD):/home/carrow -it --workdir=/home/carrow/ carrow:builder
 
+test:
+	go test -v ./...
+
 fresh: clean all

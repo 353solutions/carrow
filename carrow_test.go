@@ -9,7 +9,7 @@ import (
 func TestField(t *testing.T) {
 	require := require.New(t)
 	name, dtype := "field-1", IntegerType
-	field,_ := NewField(name, dtype)
+	field, _ := NewField(name, dtype)
 	require.Equal(field.Name(), name, "field name")
 	require.Equal(field.DType(), dtype, "field dtype")
 }
@@ -17,9 +17,23 @@ func TestField(t *testing.T) {
 func TestSchema(t *testing.T) {
 	require := require.New(t)
 	name, dtype := "field-1", IntegerType
-	field,_ := NewField(name, dtype)
-	schema,_ := NewSchema([]Field{*field})
+	field, _ := NewField(name, dtype)
+	schema, _ := NewSchema([]Field{*field})
 	require.Equal(field.Name(), name, "field name")
 	require.Equal(field.DType(), dtype, "field dtype")
 	require.NotNil(schema)
+}
+
+func TestIntBuilder(t *testing.T) {
+	require := require.New(t)
+	b := NewIntArrayBuilder()
+	require.NotNil(b.ptr, "create")
+	b.Append(7)
+}
+
+func TestFloatBuilder(t *testing.T) {
+	require := require.New(t)
+	b := NewFloatArrayBuilder()
+	require.NotNil(b.ptr, "create")
+	b.Append(7.2)
 }

@@ -97,6 +97,7 @@ finish_result array_builder_finish(void *vp) {
     res.arr = (void *)(out.get());
   }
 
+  // TODO: Will out delete the underlying array?
   return res;
 }
 
