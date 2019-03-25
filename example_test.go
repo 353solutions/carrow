@@ -60,8 +60,10 @@ func Example() {
 	}
 
 	fmt.Printf("num cols: %d\n", table.NumCols())
-	// Output: num cols: 2
 
 	fmt.Printf("num rows: %d\n", table.NumRows())
-	// Output: num rows: 100
+
+	// Output:
+	// num cols: 2
+	// num rows: 100
 }

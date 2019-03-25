@@ -163,13 +163,17 @@ void *table_new(void *sp, void *cp) {
 }
 
 const char *table_validate(void *vp) {
-  auto table = (arrow::Table *)vp;
-  auto status = table->Validate();
-  if (status.ok()) {
-    return NULL;
-  }
+  return NULL;
+  /*
+        auto table = (arrow::Table *)vp;
+        // FIXME: arrow::Table::Validate is pure virtual
+        auto status = table->Validate();
+        if (status.ok()) {
+        return NULL;
+        }
 
-  return status.ToString().c_str();
+        return status.ToString().c_str();
+  */
 }
 
 long long table_num_cols(void *vp) {
@@ -183,6 +187,9 @@ long long table_num_rows(void *vp) {
 }
 
 void table_free(void *vp) {
+  if (vp == NULL) {
+    return;
+  }
   auto table = (arrow::Table *)vp;
   delete table;
 }
