@@ -134,6 +134,59 @@ void column_free(void *vp) {
   delete column;
 }
 
+void *column_field(void *vp) {
+  auto column = (arrow::Column *)vp;
+  return column->field().get();
+}
+
+void *columns_new() {
+  return new std::vector<std::shared_ptr<arrow::Column>>();
+}
+
+void columns_append(void *vp, void *cp) {
+  auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)vp;
+  std::shared_ptr<arrow::Column> column((arrow::Column *)cp);
+  columns->push_back(column);
+}
+
+void columns_free(void *vp) {
+  auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)vp;
+  delete columns;
+}
+
+void *table_new(void *sp, void *cp) {
+  std::shared_ptr<arrow::Schema> schema((arrow::Schema *)sp);
+  auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)cp;
+
+  auto table = arrow::Table::Make(schema, *columns);
+  return table.get();
+}
+
+const char *table_validate(void *vp) {
+  auto table = (arrow::Table *)vp;
+  auto status = table->Validate();
+  if (status.ok()) {
+    return NULL;
+  }
+
+  return status.ToString().c_str();
+}
+
+long long table_num_cols(void *vp) {
+  auto table = (arrow::Table *)vp;
+  return table->num_columns();
+}
+
+long long table_num_rows(void *vp) {
+  auto table = (arrow::Table *)vp;
+  return table->num_rows();
+}
+
+void table_free(void *vp) {
+  auto table = (arrow::Table *)vp;
+  delete table;
+}
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

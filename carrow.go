@@ -72,8 +72,12 @@ type Schema struct {
 }
 
 // NewSchema creates a new schema
-func NewSchema(fields []Field) (*Schema, error) {
+func NewSchema(fields []*Field) (*Schema, error) {
 	cf := C.fields_new()
+	defer func() {
+		C.fields_free(cf)
+	}()
+
 	for _, f := range fields {
 		C.fields_append(cf, f.ptr)
 	}
@@ -158,4 +162,64 @@ type Column struct {
 func NewColumn(field Field, arr Array) *Column {
 	ptr := C.column_new(field.ptr, arr.ptr)
 	return &Column{ptr}
+}
+
+// Field returns the column field
+func (c *Column) Field() *Field {
+	ptr := C.column_field(c.ptr)
+	return &Field{ptr}
+}
+
+// Table is arrow table
+type Table struct {
+	ptr unsafe.Pointer
+}
+
+// NewTableFromColumns creates new Table from slice of columns
+func NewTableFromColumns(columns []*Column) (*Table, error) {
+	fields := make([]*Field, len(columns))
+	cptr := C.columns_new()
+	defer func() {
+		C.columns_free(cptr)
+	}()
+
+	for i, col := range columns {
+		fields[i] = col.Field()
+		C.columns_append(cptr, col.ptr)
+	}
+
+	schema, err := NewSchema(fields)
+	if err != nil {
+		return nil, err
+	}
+	ptr := C.table_new(schema.ptr, cptr)
+	table := &Table{ptr}
+
+	if err := table.validate(); err != nil {
+		C.table_free(ptr)
+		return nil, err
+	}
+
+	return table, nil
+}
+
+// NumRows returns the number of rows
+func (t *Table) NumRows() int {
+	return int(C.table_num_rows(t.ptr))
+}
+
+// NumCols returns the number of columns
+func (t *Table) NumCols() int {
+	return int(C.table_num_cols(t.ptr))
+}
+
+func (t *Table) validate() error {
+	cp := C.table_validate(t.ptr)
+	if cp == nil {
+		return nil
+	}
+
+	err := fmt.Errorf(C.GoString(cp))
+	C.free(unsafe.Pointer(cp))
+	return err
 }
