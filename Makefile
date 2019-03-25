@@ -12,4 +12,8 @@ libcarrow.a: carrow.o
 clean:
 	rm -f *.o *.a
 
+build-docker:
+	docker build . -t carrow:builder
+	docker run -v $(PWD):/home/carrow -it --workdir=/home/carrow/ carrow:builder
+
 fresh: clean all

@@ -28,5 +28,7 @@ RUN apt install -y -V libparquet-glib-dev
 
 #Go installation
 
-RUN cd /tmp && wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.12.1.linux-amd64.tar.gz
+RUN cd /tmp && \
+    wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.12.1.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
