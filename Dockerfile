@@ -1,13 +1,13 @@
 FROM ubuntu:18.04
 
-#Tools
+# Tools
 RUN apt-get update && apt-get install -y \
-    wget \
-    vim \ 
     git \
+    vim \ 
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
-#Apache arrow
+# Apache arrow
 RUN apt update
 RUN apt install -y -V apt-transport-https lsb-release
 RUN wget -O /usr/share/keyrings/apache-arrow-keyring.gpg https://dl.bintray.com/apache/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-keyring.gpg
@@ -24,10 +24,7 @@ RUN apt install -y -V libgandiva-glib-dev
 RUN apt install -y -V libparquet-dev 
 RUN apt install -y -V libparquet-glib-dev
 
-
-
-#Go installation
-
+# Go installation
 RUN cd /tmp && \
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.12.1.linux-amd64.tar.gz
