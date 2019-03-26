@@ -3,11 +3,12 @@ package carrow_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/353solutions/carrow"
 )
 
-func Example() {
+func TestExample(t *testing.T) {
 	size := 100
 	intBld := carrow.NewIntArrayBuilder()
 	floatBld := carrow.NewFloatArrayBuilder()
