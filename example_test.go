@@ -2,13 +2,14 @@
 package carrow_test
 
 import (
-	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/353solutions/carrow"
 )
 
 func TestExample(t *testing.T) {
+	require := require.New(t)
 	size := 100
 	intBld := carrow.NewIntArrayBuilder()
 	floatBld := carrow.NewFloatArrayBuilder()
@@ -19,52 +20,40 @@ func TestExample(t *testing.T) {
 
 	intArr, err := intBld.Finish()
 	if err != nil {
-		fmt.Printf("intBld error: %s", err)
-		return
+		require.FailNow("intBld error: %s", err)
 	}
 
 	floatArr, err := floatBld.Finish()
 	if err != nil {
-		fmt.Printf("floatBld error: %s", err)
-		return
+		require.FailNow("floatBld error: %s", err)
 	}
 
 	intField, err := carrow.NewField("incCol", carrow.IntegerType)
 	if err != nil {
-		fmt.Printf("intField error: %s", err)
-		return
+		require.FailNow("intField error: %s", err)
 	}
 
 	floatField, err := carrow.NewField("floatCol", carrow.FloatType)
 	if err != nil {
-		fmt.Printf("floatField error: %s", err)
-		return
+		require.FailNow("floatField error: %s", err)
 	}
 
 	intCol, err := carrow.NewColumn(intField, intArr)
 	if err != nil {
-		fmt.Printf("intCol error: %s", err)
-		return
+		require.FailNow("intCol error: %s", err)
 	}
 
 	floatCol, err := carrow.NewColumn(floatField, floatArr)
 	if err != nil {
-		fmt.Printf("floatCol error: %s", err)
-		return
+		require.FailNow("floatCol error: %s", err)
 	}
 
 	cols := []*carrow.Column{intCol, floatCol}
 	table, err := carrow.NewTableFromColumns(cols)
 	if err != nil {
-		fmt.Printf("table creation error: %s", err)
-		return
+		require.FailNow("table creation error: %s", err)
 	}
 
-	fmt.Printf("num cols: %d\n", table.NumCols())
-
-	fmt.Printf("num rows: %d\n", table.NumRows())
-
-	// Output:
-	// num cols: 2
-	// num rows: 100
+	require.Equal(2,table.NumCols(),"number of cols in table")
+	require.Equal(100,table.NumRows(),"number of rows in table")
 }
