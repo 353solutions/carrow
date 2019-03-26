@@ -19,4 +19,7 @@ build-docker:
 test:
 	go test -v ./...
 
+stress:
+	go test  -run  Example -count 10000
+
 fresh: clean all

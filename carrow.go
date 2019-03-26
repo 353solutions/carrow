@@ -59,6 +59,27 @@ func NewField(name string, dtype DType) (*Field, error) {
 	return field, nil
 }
 
+type FieldList struct {
+	ptr unsafe.Pointer
+}
+
+// NewFieldList returns a new Field
+func NewFieldList() (*FieldList, error) {
+
+	ptr := C.fields_new()
+
+	if ptr == nil {
+		return nil, fmt.Errorf("can't create fields list")
+	}
+
+	fieldList := &FieldList{ptr}
+
+	runtime.SetFinalizer(fieldList, func(f *FieldList) {
+		C.field_free(f.ptr)
+	})
+	return fieldList, nil
+}
+
 // Name returns the field name
 func (f *Field) Name() string {
 	return C.GoString(C.field_name(f.ptr))
@@ -76,11 +97,11 @@ type Schema struct {
 
 // NewSchema creates a new schema
 func NewSchema(fields []*Field) (*Schema, error) {
-	cf := C.fields_new()
-	defer func() {
-		// FIXME
-		//		C.fields_free(cf)
-	}()
+	fieldsList, err := NewFieldList()
+	if err != nil {
+		return nil, fmt.Errorf("can't create schema,failed creating fields list")
+	}
+	cf := fieldsList.ptr
 
 	for _, f := range fields {
 		C.fields_append(cf, f.ptr)
