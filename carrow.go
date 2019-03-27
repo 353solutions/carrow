@@ -63,7 +63,7 @@ type FieldList struct {
 	ptr unsafe.Pointer
 }
 
-// NewFieldList returns a new Field
+// NewFieldList returns a new Field List
 func NewFieldList() (*FieldList, error) {
 
 	ptr := C.fields_new()
@@ -183,11 +183,21 @@ type Column struct {
 	ptr unsafe.Pointer
 }
 
+// DType returns the Column data type
+func (c *Column) DType() DType {
+	return DType(C.column_dtype(c.ptr))
+}
+
 // NewColumn returns a new column
 func NewColumn(field *Field, arr *Array) (*Column, error) {
-	// TODO: Check dtypes
+	// TODO: Check ptr not nil?
 	ptr := C.column_new(field.ptr, arr.ptr)
-	return &Column{ptr}, nil
+	c := &Column{ptr}
+	if c.DType() != field.DType() {
+		return nil, fmt.Errorf("column type doesn't match Field type")
+	}
+
+	return c, nil
 }
 
 // Field returns the column field
