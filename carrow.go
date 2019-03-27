@@ -181,6 +181,11 @@ type Table struct {
 	ptr unsafe.Pointer
 }
 
+// Ptr returns the underlying arrow pointer
+func (t *Table) Ptr() unsafe.Pointer {
+	return t.ptr
+}
+
 // NewTableFromColumns creates new Table from slice of columns
 func NewTableFromColumns(columns []*Column) (*Table, error) {
 	fields := make([]*Field, len(columns))
