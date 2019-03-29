@@ -126,6 +126,11 @@ void *column_new(void *fp, void *ap) {
   return new arrow::Column(field, array);
 }
 
+int column_dtype(void *vp) {
+  auto column = (arrow::Column *)vp;
+  return column->type()->id();
+}
+
 void column_free(void *vp) {
   if (vp == NULL) {
     return;

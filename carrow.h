@@ -33,6 +33,7 @@ void array_free(void *vp);
 
 void *column_new(void *field, void *array);
 void *column_field(void *vp);
+int  column_dtype(void *vp);
 void column_free(void *vp);
 
 void *columns_new();

@@ -10,6 +10,8 @@ package carrow
 import "C"
 import (
 	"fmt"
+	"runtime"
+
 	//	"runtime"
 	"unsafe"
 )
@@ -50,12 +52,32 @@ func NewField(name string, dtype DType) (*Field, error) {
 	}
 
 	field := &Field{ptr}
-	/* FIXME
+
 	runtime.SetFinalizer(field, func(f *Field) {
 		C.field_free(f.ptr)
 	})
-	*/
 	return field, nil
+}
+
+type FieldList struct {
+	ptr unsafe.Pointer
+}
+
+// NewFieldList returns a new Field List
+func NewFieldList() (*FieldList, error) {
+
+	ptr := C.fields_new()
+
+	if ptr == nil {
+		return nil, fmt.Errorf("can't create fields list")
+	}
+
+	fieldList := &FieldList{ptr}
+
+	runtime.SetFinalizer(fieldList, func(f *FieldList) {
+		C.field_free(f.ptr)
+	})
+	return fieldList, nil
 }
 
 // Name returns the field name
@@ -75,11 +97,11 @@ type Schema struct {
 
 // NewSchema creates a new schema
 func NewSchema(fields []*Field) (*Schema, error) {
-	cf := C.fields_new()
-	defer func() {
-		// FIXME
-		//		C.fields_free(cf)
-	}()
+	fieldsList, err := NewFieldList()
+	if err != nil {
+		return nil, fmt.Errorf("can't create schema,failed creating fields list")
+	}
+	cf := fieldsList.ptr
 
 	for _, f := range fields {
 		C.fields_append(cf, f.ptr)
@@ -89,11 +111,9 @@ func NewSchema(fields []*Field) (*Schema, error) {
 		return nil, fmt.Errorf("can't create schema")
 	}
 	schema := &Schema{ptr}
-	/* FIXME
 	runtime.SetFinalizer(schema, func(s *Schema) {
 		C.schema_free(schema.ptr)
 	})
-	*/
 
 	return schema, nil
 }
@@ -163,11 +183,21 @@ type Column struct {
 	ptr unsafe.Pointer
 }
 
+// DType returns the Column data type
+func (c *Column) DType() DType {
+	return DType(C.column_dtype(c.ptr))
+}
+
 // NewColumn returns a new column
 func NewColumn(field *Field, arr *Array) (*Column, error) {
-	// TODO: Check dtypes
+	// TODO: Check ptr not nil?
 	ptr := C.column_new(field.ptr, arr.ptr)
-	return &Column{ptr}, nil
+	c := &Column{ptr}
+	if c.DType() != field.DType() {
+		return nil, fmt.Errorf("column type doesn't match Field type")
+	}
+
+	return c, nil
 }
 
 // Field returns the column field
