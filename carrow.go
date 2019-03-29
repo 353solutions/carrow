@@ -116,47 +116,47 @@ func NewSchema(fields []*Field) (*Schema, error) {
 	return schema, nil
 }
 
-// FloatArrayBuilder used for building float Arrays
-type FloatArrayBuilder struct {
+// Float64ArrayBuilder used for building float Arrays
+type Float64ArrayBuilder struct {
 	ptr unsafe.Pointer
 }
 
-// NewFloatArrayBuilder returns a new FloatArrayBuilder
-func NewFloatArrayBuilder() *FloatArrayBuilder {
+// NewFloat64ArrayBuilder returns a new Float64ArrayBuilder
+func NewFloat64ArrayBuilder() *Float64ArrayBuilder {
 	ptr := C.array_builder_new(C.int(Float64Type))
-	return &FloatArrayBuilder{ptr}
+	return &Float64ArrayBuilder{ptr}
 }
 
 // Append appends an integer
-func (b *FloatArrayBuilder) Append(val float64) error {
+func (b *Float64ArrayBuilder) Append(val float64) error {
 	C.array_builder_append_float(b.ptr, C.double(val))
 	return nil
 }
 
 // Finish creates the array
-func (b *FloatArrayBuilder) Finish() (*Array, error) {
+func (b *Float64ArrayBuilder) Finish() (*Array, error) {
 	return builderFinish(b.ptr)
 }
 
-// IntArrayBuilder used for building integer Arrays
-type IntArrayBuilder struct {
+// Int64ArrayBuilder used for building integer Arrays
+type Int64ArrayBuilder struct {
 	ptr unsafe.Pointer
 }
 
-// NewIntArrayBuilder returns a new IntArrayBuilder
-func NewIntArrayBuilder() *IntArrayBuilder {
+// NewInt64ArrayBuilder returns a new Int64ArrayBuilder
+func NewInt64ArrayBuilder() *Int64ArrayBuilder {
 	ptr := C.array_builder_new(C.int(Integer64Type))
-	return &IntArrayBuilder{ptr}
+	return &Int64ArrayBuilder{ptr}
 }
 
 // Append appends an integer
-func (b *IntArrayBuilder) Append(val int) error {
+func (b *Int64ArrayBuilder) Append(val int) error {
 	C.array_builder_append_int(b.ptr, C.longlong(val))
 	return nil
 }
 
 // Finish creates the array
-func (b *IntArrayBuilder) Finish() (*Array, error) {
+func (b *Int64ArrayBuilder) Finish() (*Array, error) {
 	return builderFinish(b.ptr)
 }
 
