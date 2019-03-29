@@ -12,7 +12,7 @@ func Example() {
 	intBld := carrow.NewInt64ArrayBuilder()
 	floatBld := carrow.NewFloat64ArrayBuilder()
 	for i := 0; i < size; i++ {
-		intBld.Append(i)
+		intBld.Append(int64(i))
 		floatBld.Append(float64(i))
 	}
 

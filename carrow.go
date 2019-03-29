@@ -150,7 +150,7 @@ func NewInt64ArrayBuilder() *Int64ArrayBuilder {
 }
 
 // Append appends an integer
-func (b *Int64ArrayBuilder) Append(val int) error {
+func (b *Int64ArrayBuilder) Append(val int64) error {
 	C.array_builder_append_int(b.ptr, C.longlong(val))
 	return nil
 }
