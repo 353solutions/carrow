@@ -19,15 +19,15 @@ type DType C.int
 
 // Supported data types
 var (
-	IntegerType = DType(C.INTEGER_DTYPE)
-	FloatType   = DType(C.FLOAT_DTYPE)
+	Integer64Type = DType(C.INTEGER64_DTYPE)
+	Float64Type   = DType(C.FLOAT64_DTYPE)
 )
 
 func (dt DType) String() string {
 	switch dt {
-	case IntegerType:
+	case Integer64Type:
 		return "int64"
-	case FloatType:
+	case Float64Type:
 		return "float64"
 	}
 
@@ -123,7 +123,7 @@ type FloatArrayBuilder struct {
 
 // NewFloatArrayBuilder returns a new FloatArrayBuilder
 func NewFloatArrayBuilder() *FloatArrayBuilder {
-	ptr := C.array_builder_new(C.int(FloatType))
+	ptr := C.array_builder_new(C.int(Float64Type))
 	return &FloatArrayBuilder{ptr}
 }
 
@@ -145,7 +145,7 @@ type IntArrayBuilder struct {
 
 // NewIntArrayBuilder returns a new IntArrayBuilder
 func NewIntArrayBuilder() *IntArrayBuilder {
-	ptr := C.array_builder_new(C.int(IntegerType))
+	ptr := C.array_builder_new(C.int(Integer64Type))
 	return &IntArrayBuilder{ptr}
 }
 

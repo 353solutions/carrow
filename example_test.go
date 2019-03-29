@@ -28,13 +28,13 @@ func Example() {
 		return
 	}
 
-	intField, err := carrow.NewField("incCol", carrow.IntegerType)
+	intField, err := carrow.NewField("incCol", carrow.Integer64Type)
 	if err != nil {
 		fmt.Printf("intField error: %s", err)
 		return
 	}
 
-	floatField, err := carrow.NewField("floatCol", carrow.FloatType)
+	floatField, err := carrow.NewField("floatCol", carrow.Float64Type)
 	if err != nil {
 		fmt.Printf("floatField error: %s", err)
 		return

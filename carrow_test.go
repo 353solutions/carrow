@@ -8,7 +8,7 @@ import (
 
 func TestField(t *testing.T) {
 	require := require.New(t)
-	name, dtype := "field-1", IntegerType
+	name, dtype := "field-1", Integer64Type
 	field, _ := NewField(name, dtype)
 	require.Equal(field.Name(), name, "field name")
 	require.Equal(field.DType(), dtype, "field dtype")
@@ -16,7 +16,7 @@ func TestField(t *testing.T) {
 
 func TestSchema(t *testing.T) {
 	require := require.New(t)
-	name, dtype := "field-1", IntegerType
+	name, dtype := "field-1", Integer64Type
 	field, _ := NewField(name, dtype)
 	schema, _ := NewSchema([]*Field{field})
 	require.Equal(field.Name(), name, "field name")

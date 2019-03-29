@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-extern const int INTEGER_DTYPE;
-extern const int FLOAT_DTYPE;
+extern const int INTEGER64_DTYPE;
+extern const int FLOAT64_DTYPE;
 
 void *field_new(char *name, int type);
 const char *field_name(void *field);
