@@ -7,14 +7,14 @@
 extern "C" {
 #endif
 
-const int INTEGER_DTYPE = arrow::Type::INT64;
-const int FLOAT_DTYPE = arrow::Type::DOUBLE;
+const int INTEGER64_DTYPE = arrow::Type::INT64;
+const int FLOAT64_DTYPE = arrow::Type::DOUBLE;
 
 std::shared_ptr<arrow::DataType> data_type(int dtype) {
   switch (dtype) {
-  case INTEGER_DTYPE:
+  case INTEGER64_DTYPE:
     return arrow::int64();
-  case FLOAT_DTYPE:
+  case FLOAT64_DTYPE:
     return arrow::float64();
   }
 
@@ -76,9 +76,9 @@ void schema_free(void *vp) {
 
 void *array_builder_new(int dtype) {
   switch (dtype) {
-  case INTEGER_DTYPE:
+  case INTEGER64_DTYPE:
     return new arrow::Int64Builder();
-  case FLOAT_DTYPE:
+  case FLOAT64_DTYPE:
     return new arrow::DoubleBuilder();
   }
 

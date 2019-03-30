@@ -11,8 +11,6 @@ import "C"
 import (
 	"fmt"
 	"runtime"
-
-	//	"runtime"
 	"unsafe"
 )
 
@@ -21,15 +19,15 @@ type DType C.int
 
 // Supported data types
 var (
-	IntegerType = DType(C.INTEGER_DTYPE)
-	FloatType   = DType(C.FLOAT_DTYPE)
+	Integer64Type = DType(C.INTEGER64_DTYPE)
+	Float64Type   = DType(C.FLOAT64_DTYPE)
 )
 
 func (dt DType) String() string {
 	switch dt {
-	case IntegerType:
+	case Integer64Type:
 		return "int64"
-	case FloatType:
+	case Float64Type:
 		return "float64"
 	}
 
@@ -118,47 +116,47 @@ func NewSchema(fields []*Field) (*Schema, error) {
 	return schema, nil
 }
 
-// FloatArrayBuilder used for building float Arrays
-type FloatArrayBuilder struct {
+// Float64ArrayBuilder used for building float Arrays
+type Float64ArrayBuilder struct {
 	ptr unsafe.Pointer
 }
 
-// NewFloatArrayBuilder returns a new FloatArrayBuilder
-func NewFloatArrayBuilder() *FloatArrayBuilder {
-	ptr := C.array_builder_new(C.int(FloatType))
-	return &FloatArrayBuilder{ptr}
+// NewFloat64ArrayBuilder returns a new Float64ArrayBuilder
+func NewFloat64ArrayBuilder() *Float64ArrayBuilder {
+	ptr := C.array_builder_new(C.int(Float64Type))
+	return &Float64ArrayBuilder{ptr}
 }
 
 // Append appends an integer
-func (b *FloatArrayBuilder) Append(val float64) error {
+func (b *Float64ArrayBuilder) Append(val float64) error {
 	C.array_builder_append_float(b.ptr, C.double(val))
 	return nil
 }
 
 // Finish creates the array
-func (b *FloatArrayBuilder) Finish() (*Array, error) {
+func (b *Float64ArrayBuilder) Finish() (*Array, error) {
 	return builderFinish(b.ptr)
 }
 
-// IntArrayBuilder used for building integer Arrays
-type IntArrayBuilder struct {
+// Int64ArrayBuilder used for building integer Arrays
+type Int64ArrayBuilder struct {
 	ptr unsafe.Pointer
 }
 
-// NewIntArrayBuilder returns a new IntArrayBuilder
-func NewIntArrayBuilder() *IntArrayBuilder {
-	ptr := C.array_builder_new(C.int(IntegerType))
-	return &IntArrayBuilder{ptr}
+// NewInt64ArrayBuilder returns a new Int64ArrayBuilder
+func NewInt64ArrayBuilder() *Int64ArrayBuilder {
+	ptr := C.array_builder_new(C.int(Integer64Type))
+	return &Int64ArrayBuilder{ptr}
 }
 
 // Append appends an integer
-func (b *IntArrayBuilder) Append(val int) error {
+func (b *Int64ArrayBuilder) Append(val int64) error {
 	C.array_builder_append_int(b.ptr, C.longlong(val))
 	return nil
 }
 
 // Finish creates the array
-func (b *IntArrayBuilder) Finish() (*Array, error) {
+func (b *Int64ArrayBuilder) Finish() (*Array, error) {
 	return builderFinish(b.ptr)
 }
 
