@@ -3,12 +3,12 @@ package main
 import (
 	"C"
 	"fmt"
-
+	"unsafe"
 	"github.com/353solutions/carrow"
 )
 
 //export Build
-func Build() {
+func Build() unsafe.Pointer {
 	size := 100
 	intBld := carrow.NewInt64ArrayBuilder()
 	floatBld := carrow.NewFloat64ArrayBuilder()
@@ -20,48 +20,50 @@ func Build() {
 	intArr, err := intBld.Finish()
 	if err != nil {
 		fmt.Printf("intBld error: %s", err)
-		return
+		return nil
 	}
 
 	floatArr, err := floatBld.Finish()
 	if err != nil {
 		fmt.Printf("floatBld error: %s", err)
-		return
+		return nil
 	}
 
 	intField, err := carrow.NewField("incCol", carrow.Integer64Type)
 	if err != nil {
 		fmt.Printf("intField error: %s", err)
-		return
+		return nil
 	}
 
 	floatField, err := carrow.NewField("floatCol", carrow.Float64Type)
 	if err != nil {
 		fmt.Printf("floatField error: %s", err)
-		return
+		return nil
 	}
 
 	intCol, err := carrow.NewColumn(intField, intArr)
 	if err != nil {
 		fmt.Printf("intCol error: %s", err)
-		return
+		return nil
 	}
 
 	floatCol, err := carrow.NewColumn(floatField, floatArr)
 	if err != nil {
 		fmt.Printf("floatCol error: %s", err)
-		return
+		return nil
 	}
 
 	cols := []*carrow.Column{intCol, floatCol}
 	table, err := carrow.NewTableFromColumns(cols)
 	if err != nil {
 		fmt.Printf("table creation error: %s", err)
-		return
+		return nil
 	}
 
 	fmt.Printf("num cols: %d\n", table.NumCols())
 	fmt.Printf("num rows: %d\n", table.NumRows())
+
+	return table.Pointer()
 }
 
 func main() {}

@@ -259,3 +259,7 @@ func (t *Table) validate() error {
 	C.free(unsafe.Pointer(cp))
 	return err
 }
+
+func(t *Table) Pointer() unsafe.Pointer{
+	return t.ptr
+}
