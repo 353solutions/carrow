@@ -3,3 +3,4 @@ carrow
 *.a
 .vscode
 .idea
+lib/artifacts/*

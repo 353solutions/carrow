@@ -11,6 +11,7 @@ libcarrow.a: carrow.o
 
 clean:
 	rm -f *.o *.a
+	rm -rf ./lib/artifacts
 
 build-docker:
 	docker build . -t carrow:builder
@@ -18,6 +19,10 @@ build-docker:
 
 test:
 	go test -v ./...
+
+carrow-lib:
+	mkdir -p lib/artifacts
+	go build -o ./lib/artifacts/libcarrow.so -buildmode=c-shared lib/carrow_lib.go
 
 benchmark:
 	go test  -run  Example -count 10000
