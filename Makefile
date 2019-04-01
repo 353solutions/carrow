@@ -1,4 +1,4 @@
-.PHONY: clean python-bindings
+.PHONY: clean lib python-bindings
 
 all: libcarrow.a
 	go build .
@@ -12,6 +12,7 @@ libcarrow.a: carrow.o
 clean:
 	rm -f *.o *.a
 	rm -rf ./lib/artifacts
+	rm -rf ./python-bindings/artifacts
 
 build-docker:
 	docker build . -t carrow:builder
@@ -20,7 +21,7 @@ build-docker:
 test:
 	go test -v ./...
 
-carrow-lib:
+lib:
 	mkdir -p lib/artifacts
 	go build -o ./lib/artifacts/libcarrow.so -buildmode=c-shared lib/carrow_lib.go
 
