@@ -4,3 +4,4 @@ carrow
 .vscode
 .idea
 lib/artifacts/*
+python-bindings/artifacts/*
