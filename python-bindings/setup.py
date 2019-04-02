@@ -14,6 +14,9 @@ for ext in ext_modules:
     ext.include_dirs.append(pa.get_include())
     ext.libraries.extend(pa.get_libraries())
     ext.library_dirs.extend(pa.get_library_dirs())
+    ext.include_dirs.append("/home/carrow/lib/artifacts/")
+    ext.libraries.extend("/home/carrow/lib/artifacts/")
+    ext.libraries.extend("carrow")
 
     if os.name == 'posix':
         ext.extra_compile_args.append('-std=c++11')
