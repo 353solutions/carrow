@@ -2,15 +2,18 @@ from distutils.core import setup
 from Cython.Build import cythonize
 
 import os
+from os.path import dirname, abspath
 import numpy as np
 import pyarrow as pa
+
+here = dirname(abspath(__file__))
 
 
 ext_modules = cythonize("example.pyx")
 
 for ext in ext_modules:
 
-    ext.include_dirs.append('/home/carrow/lib/artifacts')
+    ext.include_dirs.append(f'{here}/../lib/artifacts')
     ext.libraries.extend(["carrow"])
 
     # The Numpy C headers are currently required
