@@ -25,4 +25,5 @@ RUN apt install -y -V libarrow-dev
 
 WORKDIR /carrow
 COPY . .
+RUN make
 RUN go test -v ./...

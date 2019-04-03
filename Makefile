@@ -19,6 +19,9 @@ build-docker:
 test:
 	go test -v ./...
 
+circleci:
+	docker build -f Dockerfile.test .
+
 benchmark:
 	go test  -run  Example -count 10000
 
