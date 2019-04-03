@@ -1,0 +1,6 @@
+version: 2
+jobs:
+  test:
+    steps:
+      - checkout
+      - run: docker build -f Dockerfile.test .
