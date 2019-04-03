@@ -1,6 +1,7 @@
 version: 2
 jobs:
   test:
+    machine: true
     steps:
       - checkout
       - run: docker build -f Dockerfile.test .
