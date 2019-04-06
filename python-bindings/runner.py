@@ -1,2 +1,2 @@
-from "bindings" import *
-build()
+from bindings import *
+try_build()

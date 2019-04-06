@@ -1,1 +1,3 @@
-example.cpp
+*.c
+*.cpp
+*.so
