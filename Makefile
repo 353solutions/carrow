@@ -1,6 +1,6 @@
 .PHONY: clean lib python-bindings
 
-all: libcarrow.a lib python-bindings
+all: libcarrow.a
 	go build .
 
 libcarrow.a: carrow.o
