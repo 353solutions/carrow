@@ -30,7 +30,6 @@ lib-clean:
 	rm -rf ./lib/artifacts
 
 python-bindings: lib
-	cp lib/artifacts/* ./python-bindings
 	cd ./python-bindings && \
 	pip install -r requirements.txt && \
 	python3.6 setup.py build_ext --inplace
