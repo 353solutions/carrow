@@ -9,7 +9,7 @@ import pyarrow as pa
 here = dirname(abspath(__file__))
 
 
-ext_modules = cythonize("example.pyx")
+ext_modules = cythonize("bindings.pyx")
 
 for ext in ext_modules:
 

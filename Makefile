@@ -1,6 +1,6 @@
 .PHONY: clean lib python-bindings
 
-all: libcarrow.a
+all: libcarrow.a lib python-bindings
 	go build .
 
 libcarrow.a: carrow.o
@@ -9,10 +9,8 @@ libcarrow.a: carrow.o
 %.o: %.cc
 	g++ -Wall -O2 -std=c++11 -o $@ -c $^
 
-clean:
+clean: lib-clean python-bindings-clean
 	rm -f *.o *.a
-	rm -rf ./lib/artifacts
-	rm -rf ./python-bindings/artifacts
 
 build-docker:
 	docker build . -t carrow:builder
@@ -25,8 +23,14 @@ lib:
 	mkdir -p lib/artifacts
 	go build -o ./lib/artifacts/libcarrow.so -buildmode=c-shared lib/carrow_lib.go
 
+lib-clean:
+	rm -rf ./lib/artifacts
+
 python-bindings:
 	cd ./python-bindings && python3.6 setup.py build_ext --inplace && mkdir -p artifacts && mv -t artifacts *.so *.cpp build
+
+python-bindings-clean:
+	rm -rf ./python-bindings/artifacts
 
 benchmark:
 	go test  -run  Example -count 10000
