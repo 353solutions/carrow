@@ -19,6 +19,9 @@ build-docker:
 test:
 	go test -v ./...
 
+circleci:
+	docker build -f Dockerfile.test .
+
 lib:
 	mkdir -p lib/artifacts
 	go build -o ./lib/artifacts/libcarrow.so -buildmode=c-shared lib/carrow_lib.go
