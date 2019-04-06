@@ -29,13 +29,14 @@ lib:
 lib-clean:
 	rm -rf ./lib/artifacts
 
-python-bindings:
+python-bindings: lib
+	cp lib/artifacts/* ./python-bindings
 	cd ./python-bindings && \
 	pip install -r requirements.txt && \
 	python3.6 setup.py build_ext --inplace
 
 python-bindings-clean:
-	cd python-bindings && rm -rf *.so *.cpp build
+	cd python-bindings && rm -rf *.so *.cpp *.c *.h build
 
 benchmark:
 	go test  -run  Example -count 10000

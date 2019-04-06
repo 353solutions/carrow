@@ -1,7 +1,7 @@
 # distutils: language=c++
 
 # from pyarrow.lib cimport *
-cdef extern from "../../lib/artifacts/libcarrow.h":
+cdef extern from 'libcarrow.h':
      void* Build()
 
 def try_build():
