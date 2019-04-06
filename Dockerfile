@@ -25,6 +25,11 @@ RUN apt install -y -V libparquet-dev
 RUN apt install -y -V libparquet-glib-dev\
 
 # Python bindings
+
+RUN cd /tmp && \
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python3.6 get-pip.py
+    
 RUN apt-get install python3-dev
 
 # Go installation

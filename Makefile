@@ -27,7 +27,10 @@ lib-clean:
 	rm -rf ./lib/artifacts
 
 python-bindings:
-	cd ./python-bindings && python3.6 setup.py build_ext --inplace && mkdir -p artifacts && mv -t artifacts *.so *.cpp build
+	cd ./python-bindings && \
+	pip install -r requirements.txt && \
+	python3.6 setup.py build_ext --inplace && \
+	mkdir -p artifacts && mv -t artifacts *.so *.cpp build
 
 python-bindings-clean:
 	rm -rf ./python-bindings/artifacts
