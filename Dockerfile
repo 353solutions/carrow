@@ -22,7 +22,10 @@ RUN apt install -y -V libplasma-glib-dev
 RUN apt install -y -V libgandiva-dev 
 RUN apt install -y -V libgandiva-glib-dev
 RUN apt install -y -V libparquet-dev 
-RUN apt install -y -V libparquet-glib-dev
+RUN apt install -y -V libparquet-glib-dev\
+
+# Python bindings
+RUN apt-get install python3-dev
 
 # Go installation
 RUN cd /tmp && \
