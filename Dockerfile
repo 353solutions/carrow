@@ -22,15 +22,16 @@ RUN apt install -y -V libplasma-glib-dev
 RUN apt install -y -V libgandiva-dev 
 RUN apt install -y -V libgandiva-glib-dev
 RUN apt install -y -V libparquet-dev 
-RUN apt install -y -V libparquet-glib-dev\
+RUN apt install -y -V libparquet-glib-dev
 
 # Python bindings
+RUN apt install -y -V curl
 
 RUN cd /tmp && \
     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python3.6 get-pip.py
-    
-RUN apt-get install python3-dev
+
+RUN apt-get install -y -V python3-dev
 
 # Go installation
 RUN cd /tmp && \
