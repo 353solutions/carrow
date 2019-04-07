@@ -9,7 +9,7 @@ libcarrow.a: carrow.o
 %.o: %.cc
 	g++ -Wall -O2 -std=c++11 -o $@ -c $^
 
-clean: lib-clean python-bindings-clean
+clean: python-bindings-clean
 	rm -f *.o *.a
 
 build-docker:
@@ -22,15 +22,9 @@ test:
 circleci:
 	docker build -f Dockerfile.test .
 
-lib:
-	mkdir -p lib/artifacts
-	go build -o ./lib/artifacts/libcarrow.so -buildmode=c-shared lib/carrow_lib.go
-
-lib-clean:
-	rm -rf ./lib/artifacts
-
-python-bindings: lib
+python-bindings:
 	cd ./python-bindings && \
+	go build -o carrow_bindings.so -buildmode=c-shared carrow_bindings.go && \
 	pip install -r requirements.txt && \
 	python3.6 setup.py build_ext --inplace
 

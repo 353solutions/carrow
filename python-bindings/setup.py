@@ -13,7 +13,6 @@ ext_modules = cythonize("bindings.pyx")
 
 for ext in ext_modules:
 
-    ext.include_dirs.append(f'{here}/../lib/artifacts')
     ext.libraries.extend(["carrow"])
 
     # The Numpy C headers are currently required

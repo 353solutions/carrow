@@ -1,11 +1,6 @@
 # distutils: language=c++
 
 from pyarrow.lib cimport *
-from os.path import dirname, abspath
-from ctypes import cdll
-
-here = dirname(abspath(__file__))
-lib = cdll.LoadLibrary(f'{here}/../lib/artifacts/libcarrow.so')
 
 # failed to load like this
 # cdef extern from 'libcarrow.h':
