@@ -1,7 +1,7 @@
 .PHONY:
 
 all:
-	go build -o carrow_bindings.so -buildmode=c-shared carrow_bindings.go && \
+	go build -o libcarrow_bindings.so -buildmode=c-shared carrow_bindings.go && \
 	pip install -r requirements.txt && \
 	python3.6 setup.py build_ext --inplace
 

@@ -1,11 +1,7 @@
 # distutils: language=c++
 
 from pyarrow.lib cimport *
-
-# failed to load like this
-cdef extern from 'carrow_bindings.h':
-     void Build()
-
+cimport c_bindings
 
 def try_build():
     # Just an example function accessing both the pyarrow Cython API
@@ -15,5 +11,5 @@ def try_build():
     #    raise TypeError("not an array")
     #return arr.get().length()
     print("hello")
-    Build()
+    c_bindings.Build()
 

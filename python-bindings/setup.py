@@ -12,14 +12,16 @@ here = dirname(abspath(__file__))
 ext_modules = cythonize("bindings.pyx")
 
 for ext in ext_modules:
-
-    ext.libraries.extend(["carrow"])
-
+    ext.library_dirs.extend([f'{here}'])
+    ext.libraries.extend(["carrow_bindings"])
     # The Numpy C headers are currently required
     ext.include_dirs.append(np.get_include())
     ext.include_dirs.append(pa.get_include())
     ext.libraries.extend(pa.get_libraries())
     ext.library_dirs.extend(pa.get_library_dirs())
+    ext.include_dirs.append(f'{here}')
+
+
 
     if os.name == 'posix':
         ext.extra_compile_args.append('-std=c++11')
