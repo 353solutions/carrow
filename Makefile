@@ -23,7 +23,7 @@ circleci:
 	docker build -f Dockerfile.test .
 
 python-bindings:
-	cd python-bindings && make 
+	cd python-bindings && make
 
 python-bindings-clean:
 	cd python-bindings && make clean

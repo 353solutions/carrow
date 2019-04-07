@@ -7,3 +7,6 @@ all:
 
 clean:
 	rm -rf *.so *.cpp *.c *.h build
+
+test:
+	python3.6 runner.py
