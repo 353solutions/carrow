@@ -14,6 +14,5 @@ def try_build():
     #if arr.get() == NULL:
     #    raise TypeError("not an array")
     #return arr.get().length()
-    lib.Build()
     print("hello")
 
