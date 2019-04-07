@@ -1,4 +1,4 @@
-.PHONY: clean lib python-bindings
+.PHONY: clean python-bindings
 
 all: libcarrow.a
 	go build .
@@ -23,13 +23,10 @@ circleci:
 	docker build -f Dockerfile.test .
 
 python-bindings:
-	cd ./python-bindings && \
-	go build -o carrow_bindings.so -buildmode=c-shared carrow_bindings.go && \
-	pip install -r requirements.txt && \
-	python3.6 setup.py build_ext --inplace
+	cd python-bindings && make 
 
 python-bindings-clean:
-	cd python-bindings && rm -rf *.so *.cpp *.c *.h build
+	cd python-bindings && make clean
 
 benchmark:
 	go test  -run  Example -count 10000

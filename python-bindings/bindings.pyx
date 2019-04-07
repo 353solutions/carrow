@@ -3,8 +3,8 @@
 from pyarrow.lib cimport *
 
 # failed to load like this
-# cdef extern from 'libcarrow.h':
-#     void Build()
+cdef extern from 'carrow_bindings.h':
+     void Build()
 
 
 def try_build():
@@ -15,4 +15,5 @@ def try_build():
     #    raise TypeError("not an array")
     #return arr.get().length()
     print("hello")
+    Build()
 
