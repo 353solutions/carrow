@@ -1,4 +1,5 @@
 # distutils: language=c++
+# cython: language_level=3
 
 from pyarrow.lib cimport *
 cimport c_bindings

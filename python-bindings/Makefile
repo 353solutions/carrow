@@ -2,11 +2,11 @@
 
 all:
 	go build -o libcarrow_bindings.so -buildmode=c-shared carrow_bindings.go && \
-	pip install -r requirements.txt && \
-	python3.6 setup.py build_ext --inplace
+#	pip install -r requirements.txt && \
+	python setup.py build_ext --inplace
 
 clean:
 	rm -rf *.so *.cpp *.c *.h build
 
 test:
-	LD_LIBRARY_PATH=${PWD} && python3.6 runner.py
+	LD_LIBRARY_PATH=${PWD} && python runner.py
