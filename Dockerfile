@@ -41,4 +41,4 @@ ENV PATH="/root/miniconda/bin:${PATH}"
 RUN conda install -y pyarrow numpy Cython
 
 # Allow build to find SO.
-RUN echo "/home/carrow/python-bindings" > /etc/ld.so.conf.d/python-bindings.conf && ldconfig
+RUN echo "/home/carrow/python-bindings" > /etc/ld.so.conf.d/python-bindings.conf
