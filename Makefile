@@ -28,6 +28,9 @@ python-bindings:
 python-bindings-clean:
 	cd python-bindings && make clean
 
+python-bindings-test:
+	cd python-bindings && make test
+
 benchmark:
 	go test  -run  Example -count 10000
 
