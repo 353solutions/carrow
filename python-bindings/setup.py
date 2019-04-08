@@ -20,6 +20,7 @@ for ext in ext_modules:
     ext.libraries.extend(pa.get_libraries())
     ext.library_dirs.extend(pa.get_library_dirs())
     ext.include_dirs.append(f'{here}')
+    ext.libraries.append('carrow_bindings')
 
 
 
