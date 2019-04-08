@@ -24,17 +24,21 @@ RUN apt install -y -V libgandiva-glib-dev
 RUN apt install -y -V libparquet-dev 
 RUN apt install -y -V libparquet-glib-dev
 
-# Python bindings
-RUN apt install -y -V curl
-
-RUN cd /tmp && \
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python3.6 get-pip.py
-
-RUN apt-get install -y -V python3-dev
-
 # Go installation
 RUN cd /tmp && \
     wget https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.12.1.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
+
+# Python bindings
+RUN apt install -y -V curl
+
+RUN cd /tmp && \
+    curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh && \
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /root/miniconda
+
+ENV PATH="/root/miniconda/bin:${PATH}"
+RUN conda install -y pyarrow numpy Cython
+
+# Allow build to find SO.
+RUN echo "/home/carrow/python-bindings" > /etc/ld.so.conf.d/python-bindings.conf && ldconfig

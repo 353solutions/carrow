@@ -9,4 +9,4 @@ clean:
 	rm -rf *.so *.cpp *.c *.h build
 
 test:
-	LD_LIBRARY_PATH=${PWD} && python runner.py
+	ldconfig && python runner.py
