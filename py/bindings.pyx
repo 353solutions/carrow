@@ -5,10 +5,12 @@ from pyarrow.lib cimport *
 cimport c_bindings
 
 def try_build():
-    c_bindings.Build()
+    table = c_bindings.CreateTable()
+    l = callArrow(table)
+    print(l)
 
-def callArrow(obj):
-    cdef shared_ptr[CArray] arr = pyarrow_unwrap_array(obj)
-    if arr.get() == NULL:
+cdef callArrow(void* table):
+    cdef CTable* table_pointer = <CTable*>table
+    if table_pointer == NULL:
         raise TypeError("not an array")
-    return arr.get().length()
+    return (table_pointer.num_columns(),table_pointer.num_rows())

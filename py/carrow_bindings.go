@@ -3,12 +3,13 @@ package main
 import "C"
 import (
 	"fmt"
-	"github.com/353solutions/carrow"
 	"unsafe"
+
+	"github.com/353solutions/carrow"
 )
 
-//export Build
-func Build() unsafe.Pointer {
+//export CreateTable
+func CreateTable() unsafe.Pointer {
 	size := 100
 	intBld := carrow.NewInt64ArrayBuilder()
 	floatBld := carrow.NewFloat64ArrayBuilder()
