@@ -1,2 +1,2 @@
 cdef extern from 'libcarrow_bindings.h':
-      void Build()
+      void* Build()
