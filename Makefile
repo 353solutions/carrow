@@ -9,7 +9,7 @@ libcarrow.a: carrow.o
 %.o: %.cc
 	g++ -Wall -O2 -std=c++11 -o $@ -c $^
 
-clean: python-bindings-clean
+clean: py-clean
 	rm -f *.o *.a
 
 build-docker:
