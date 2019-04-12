@@ -1,4 +1,4 @@
-.PHONY: clean python-bindings
+.PHONY: clean py
 
 all: libcarrow.a
 	go build .
@@ -22,14 +22,14 @@ test:
 circleci:
 	docker build -f Dockerfile.test .
 
-python-bindings:
-	cd python-bindings && make
+py:
+	cd py && make
 
-python-bindings-clean:
-	cd python-bindings && make clean
+py-clean:
+	cd py && make clean
 
-python-bindings-test:
-	cd python-bindings && make test
+py-test:
+	cd py && make test
 
 benchmark:
 	go test  -run  Example -count 10000
