@@ -17,7 +17,7 @@ build-docker:
 	docker run -v $(PWD):/home/carrow -it --workdir=/home/carrow/ carrow:builder
 
 test:
-	go test -v ./...
+	go test -v .
 
 circleci:
 	docker build -f Dockerfile.test .
