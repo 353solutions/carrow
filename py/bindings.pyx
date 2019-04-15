@@ -10,7 +10,7 @@ def try_build():
     print(l)
 
 cdef callArrow(void* table):
-    cdef CTable* table_pointer = <CTable*>table
+    cdef shared_ptr[CTable]* table_pointer = <shared_ptr[CTable]*>table
     if table_pointer == NULL:
-        raise TypeError("not an array")
-    return (table_pointer.num_columns(),table_pointer.num_rows())
+        raise TypeError("not a table")
+    return (table_pointer.get().num_columns(),table_pointer.get().num_rows())
