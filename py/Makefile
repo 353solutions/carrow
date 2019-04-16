@@ -9,3 +9,6 @@ clean:
 
 test:
 	LD_LIBRARY_PATH=$${PWD} python runner.py
+
+shell:
+	LD_LIBRARY_PATH=$${PWD} python
