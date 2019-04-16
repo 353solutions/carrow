@@ -8,7 +8,6 @@ cimport c_bindings
 def try_build():
     table = c_bindings.CreateTable()
     l = callArrow(table)
-    #print(l)
     return l
 
 cdef callArrow(void* table):
