@@ -234,7 +234,7 @@ extern "C"
     {
       return;
     }
-    auto table = (arrow::Table *)vp;
+    auto table = (std::shared_ptr<arrow::Table> *)vp;
     delete table;
   }
 
