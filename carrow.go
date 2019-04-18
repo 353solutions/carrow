@@ -57,6 +57,7 @@ func NewField(name string, dtype DType) (*Field, error) {
 	return field, nil
 }
 
+// FieldList is a warpper around std::shared_ptr<arrow::Field>
 type FieldList struct {
 	ptr unsafe.Pointer
 }
