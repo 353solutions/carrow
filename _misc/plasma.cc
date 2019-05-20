@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 
   plasma::ObjectID id = plasma::ObjectID::from_binary("00000000000000000007");
   std::shared_ptr<arrow::Buffer> buf;
-  status = client.Create(id, size, NULL, 0, &buf);
+  status = client.Create(id, size + 256, NULL, 0, &buf);
   if (!status.ok()) {
     std::cerr << "error: create obj: " << status.message() << "\n";
     std::exit(1);
@@ -74,8 +74,6 @@ int main(int argc, char** argv) {
     std::cerr << "error: write: " << status.message() << "\n";
     std::exit(1);
   }
-  client.Seal(id);
-
 
   std::cout << "OK\n";
 }

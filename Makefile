@@ -1,5 +1,7 @@
 .PHONY: clean
 
+ARROW_SRC_DIR=/src/arrow/cpp/src
+
 all: libcarrow.a
 	go build .
 
@@ -7,7 +9,7 @@ libcarrow.a: carrow.o
 	ar r $@ $^
 
 %.o: %.cc
-	g++ -Wall -O2 -std=c++11 -o $@ -c $^
+	g++ -Wall -O2 -std=c++11 -I$(ARROW_SRC_DIR) -o $@ -c $^
 
 clean:
 	rm -f *.o *.a
@@ -20,19 +22,19 @@ build-docker:
 	docker build . -t carrow:builder
 	docker run \
 		-v $(PWD):/src/carrow \
-		-v $(shell readlink -f ../arrow):/src/arrow \
 		-it --workdir=/src/carrow/ \
 		carrow:builder
 
 plasma-client:
-		g++ plasma.cc \
+		g++ _/misc/plasma.cc \
 			$(shell pkg-config --cflags --libs plasma) \
 			$(shell pkg-config --cflags --libs arrow) \
-			-I/arrow/cpp/src \
+			-I$(ARROW_SRC_DIR) \
 			--std=c++11 \
 			-o plasmac
 
 plasma-server:
+		rm -f /tmp/plasma
 		plasma_store_server -m 1000000 -s /tmp/plasma&
 
 

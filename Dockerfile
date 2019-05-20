@@ -37,3 +37,7 @@ RUN cd /tmp && \
     bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda
 ENV PATH="/miniconda/bin:${PATH}"
 RUN conda install -y pyarrow numpy Cython ipython
+
+RUN git clone git://github.com/apache/arrow.git /src/arrow
+RUN cd /src/arrow && git checkout apache-arrow-0.13.0
+WORKDIR /src/carrow
