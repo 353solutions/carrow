@@ -36,4 +36,4 @@ RUN cd /tmp && \
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda
 ENV PATH="/miniconda/bin:${PATH}"
-RUN conda install -y pyarrow numpy Cython
+RUN conda install -y pyarrow numpy Cython ipython
