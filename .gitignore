@@ -1,5 +1,6 @@
-carrow
-*.o
 *.a
-.vscode
+*.o
 .idea
+.vscode
+carrow
+plasmac
