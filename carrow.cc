@@ -24,7 +24,7 @@ const int FLOAT64_DTYPE = arrow::Type::DOUBLE;
 
 
 void here() {
-  std::cout << "\033[31m";
+  std::cout << "\033[1;31m";
   std::cout << "<< HERE >>\n";
   std::cout << "\033[0m";
   std::cout.flush();
