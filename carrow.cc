@@ -228,7 +228,14 @@ void *plasma_connect(char *path) {
 int64_t table_size(arrow::Table *table) {
   arrow::TableBatchReader rdr(*table);
   std::shared_ptr<arrow::RecordBatch> batch;
-  int64_t total_size = 0;
+  arrow::io::MockOutputStream stream;
+
+  std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
+  auto status = arrow::ipc::RecordBatchStreamWriter::Open(&stream, table->schema(), &writer);
+  WARN(status);
+  if (!status.ok()) {
+    return -1;
+  }
 
   while (true) {
     auto status = rdr.ReadNext(&batch);
@@ -241,16 +248,14 @@ int64_t table_size(arrow::Table *table) {
       break;
     }
 
-    int64_t size;
-    status = arrow::ipc::GetRecordBatchSize(*batch, &size);
+    status = writer->WriteRecordBatch(*batch, true);
     WARN(status);
     if (!status.ok()) {
       return -1;
     }
-    total_size += size;
   }
 
-  return total_size;
+  return stream.GetExtentBytesWritten();
 }
 
 bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWriter> wtr) {
