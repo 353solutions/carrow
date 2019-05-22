@@ -27,14 +27,16 @@ RUN apt install -y -V libparquet-glib-dev
 # Go installation
 RUN cd /tmp && \
     wget https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.12.5.linux-amd64.tar.gz
+    tar -C /usr/local -xzf go1.12.5.linux-amd64.tar.gz && \
+    rm go1.12.5.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 
 # Python bindings
 RUN cd /tmp && \
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda && \
+    rm Miniconda3-latest-Linux-x86_64.sh
 ENV PATH="/miniconda/bin:${PATH}"
 RUN conda install -y pyarrow numpy Cython ipython
 
