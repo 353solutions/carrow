@@ -82,9 +82,19 @@ bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWri
 }
 
 int main(int argc, char** argv) {
+  if (argc != 3) {
+    std::cerr << "error: wrong number of arguments\n";
+    std::exit(1);
+  }
+
+  auto olen = strlen(argv[2]);
+  char oid[] = "00000000000000000000";
+  memcpy(oid+20-olen, argv[2], olen);
+  std::cout << "oid: " << oid << "\n";
+
   // Start up and connect a Plasma client.
   plasma::PlasmaClient client;
-  auto status = client.Connect("/tmp/plasma", "");
+  auto status = client.Connect(argv[1], "");
   if (!status.ok()) {
       std::cerr << "error: can't connect" << status.message() << "\n";
       std::exit(1);
@@ -103,7 +113,7 @@ int main(int argc, char** argv) {
 
   std::cout << "table size " << size << "\n";
 
-  plasma::ObjectID id = plasma::ObjectID::from_binary("00000000000000000008");
+  plasma::ObjectID id = plasma::ObjectID::from_binary("00000000000000000009");
   std::shared_ptr<arrow::Buffer> buf;
   status = client.Create(id, size + 256, NULL, 0, &buf);
   if (!status.ok()) {
@@ -121,6 +131,11 @@ int main(int argc, char** argv) {
   }
   if (!write_table(table.get(), wtr)) {
     std::cerr << "error: can't write table\n";
+    std::exit(1);
+  }
+  status = client.Seal(id);
+  if (!status.ok()) {
+    std::cerr << "error: seal: " << status.message() << "\n";
     std::exit(1);
   }
 
