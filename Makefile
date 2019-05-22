@@ -1,6 +1,7 @@
 .PHONY: clean
 
 ARROW_SRC_DIR=/src/arrow/cpp/src
+PLASMA_DB=/tmp/plasma.db
 
 all: libcarrow.a
 	go build .
@@ -35,8 +36,8 @@ plasma-client:
 			-o plasmac
 
 plasma-server:
-		rm -f /tmp/plasma
-		plasma_store_server -m 1000000 -s /tmp/plasma&
+		rm -f $(PLASMA_DB)
+		plasma_store -m 1000000 -s $(PLASMA_DB)
 
 
 test:
