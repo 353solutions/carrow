@@ -26,7 +26,8 @@ build-docker:
 		carrow:builder
 
 plasma-client:
-		g++ _/misc/plasma.cc \
+		g++ _misc/plasma.cc \
+			-g \
 			$(shell pkg-config --cflags --libs plasma) \
 			$(shell pkg-config --cflags --libs arrow) \
 			-I$(ARROW_SRC_DIR) \
