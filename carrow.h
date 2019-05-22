@@ -48,7 +48,7 @@ long long table_num_rows(void *vp);
 void table_free(void *vp);
 
 void *plasma_connect(char *path);
-int plasma_write(void *cp, char *oid, void *tp);
+int plasma_write(void *cp, void *tp, char *oid);
 void plasma_disconnect(void *vp);
 
 #ifdef __cplusplus

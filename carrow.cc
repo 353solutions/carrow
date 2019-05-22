@@ -22,6 +22,14 @@ const int FLOAT64_DTYPE = arrow::Type::DOUBLE;
     } \
   } while(false);
 
+
+void here() {
+  std::cout << "\033[31m";
+  std::cout << "<< HERE >>\n";
+  std::cout << "\033[0m";
+  std::cout.flush();
+}
+
 std::shared_ptr<arrow::DataType> data_type(int dtype) {
   switch (dtype) {
   case INTEGER64_DTYPE:
@@ -112,12 +120,15 @@ result_t array_builder_finish(void *vp) {
   std::shared_ptr<arrow::Array> out;
   auto status = builder->Finish(&out);
   WARN(status);
+  delete builder;
+
 
   result_t res = {nullptr, nullptr};
   if (!status.ok()) {
     res.err = status.ToString().c_str();
   } else {
     res.obj = (void *)(out.get());
+    out.reset();
   }
 
   // TODO: Will out delete the underlying array?
@@ -214,7 +225,7 @@ void table_free(void *vp) {
 
 void *plasma_connect(char *path) {
   plasma::PlasmaClient* client = new plasma::PlasmaClient();
-  auto status = client->Connect(path);
+  auto status = client->Connect(path, "", 0);
   WARN(status);
 
   if (!status.ok()) {
@@ -225,7 +236,35 @@ void *plasma_connect(char *path) {
   return client;
 }
 
+bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWriter> writer) {
+  arrow::TableBatchReader rdr(*table);
+  std::shared_ptr<arrow::RecordBatch> batch;
+
+  while (true) {
+    auto status = rdr.ReadNext(&batch);
+    WARN(status);
+    if (!status.ok()) {
+      return false;
+    }
+
+    if (batch == nullptr) {
+      break;
+    }
+
+    status = writer->WriteRecordBatch(*batch, true);
+    WARN(status);
+    if (!status.ok()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
 int64_t table_size(arrow::Table *table) {
+  here();
+
   arrow::TableBatchReader rdr(*table);
   std::shared_ptr<arrow::RecordBatch> batch;
   arrow::io::MockOutputStream stream;
@@ -237,55 +276,21 @@ int64_t table_size(arrow::Table *table) {
     return -1;
   }
 
-  while (true) {
-    auto status = rdr.ReadNext(&batch);
-    WARN(status);
-    if (!status.ok()) {
-      return -1;
-    }
+  write_table(table, writer);
 
-    if (batch == nullptr) {
-      break;
-    }
-
-    status = writer->WriteRecordBatch(*batch, true);
-    WARN(status);
-    if (!status.ok()) {
-      return -1;
-    }
+  status = writer->Close();
+  WARN(status);
+  if (!status.ok()) {
+    return -1;
   }
 
   return stream.GetExtentBytesWritten();
 }
 
-bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWriter> wtr) {
-  arrow::TableBatchReader rdr(*table);
-  std::shared_ptr<arrow::RecordBatch> batch;
-
-  while (true) {
-    auto status = rdr.ReadNext(&batch);
-    WARN(status);
-    if (!status.ok()) {
-      return false;
-    }
-
-    if (batch == nullptr) {
-      break;
-    }
-
-    status = wtr->WriteRecordBatch(*batch, true);
-    WARN(status);
-    if (!status.ok()) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-int plasma_write(void *cp, char *oid, void *tp) {
+int plasma_write(void *cp, void *tp, char *oid) {
   auto client = (plasma::PlasmaClient *)(cp);
   auto table = (arrow::Table *)(tp);
+
   auto size = table_size(table);
 
   plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
@@ -299,15 +304,15 @@ int plasma_write(void *cp, char *oid, void *tp) {
   }
 
   arrow::io::FixedSizeBufferWriter bw(buf);
-  std::shared_ptr<arrow::ipc::RecordBatchWriter> wtr;
-  status = arrow::ipc::RecordBatchStreamWriter::Open(&bw, table->schema(), &wtr);
+  std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
+  status = arrow::ipc::RecordBatchStreamWriter::Open(&bw, table->schema(), &writer);
   WARN(status);
   if (!status.ok()) {
     // TODO: Error
     return -1;
   }
 
-  if (!write_table(table, wtr)) {
+  if (!write_table(table, writer)) {
     // TODO: Error
     return -1;
   }

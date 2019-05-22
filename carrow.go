@@ -1,6 +1,12 @@
 package carrow
 
 
+import (
+    "fmt"
+    "runtime"
+    "unsafe"
+)
+
 /*
 #cgo pkg-config: arrow plasma
 #cgo LDFLAGS: -lcarrow -L.
@@ -11,30 +17,14 @@ package carrow
 #include <stdlib.h>
 */
 import "C"
-import (
-    "encoding/hex"
-    "fmt"
-    "math/rand"
-    "runtime"
-    "time"
-    "unsafe"
-)
 
 // DType is a data type
 type DType C.int
-
-const (
-    // Length of plasma ID
-    PlasmaIDLength = 20
-)
 
 // Supported data types
 var (
     Integer64Type = DType(C.INTEGER64_DTYPE)
     Float64Type   = DType(C.FLOAT64_DTYPE)
-
-    idRnd = rand.New(rand.NewSource(time.Now().UnixNano()))
-
 )
 
 func (dt DType) String() string {
@@ -203,7 +193,10 @@ func (c *Column) DType() DType {
 
 // NewColumn returns a new column
 func NewColumn(field *Field, arr *Array) (*Column, error) {
-    // TODO: Check ptr not nil?
+    if field == nil || arr == nil {
+        return nil, fmt.Errorf("nil pointer")
+    }
+
     ptr := C.column_new(field.ptr, arr.ptr)
     c := &Column{ptr}
     if c.DType() != field.DType() {
@@ -264,6 +257,10 @@ func (t *Table) NumCols() int {
     return int(C.table_num_cols(t.ptr))
 }
 
+func (t *Table) Ptr() unsafe.Pointer {
+    return t.ptr
+}
+
 func (t *Table) validate() error {
     cp := C.table_validate(t.ptr)
     if cp == nil {
@@ -273,75 +270,4 @@ func (t *Table) validate() error {
     err := fmt.Errorf(C.GoString(cp))
     C.free(unsafe.Pointer(cp))
     return err
-}
-
-// PlasmaClient is a client to Arrow's plasma store
-type PlasmaClient struct {
-    ptr unsafe.Pointer
-}
-
-// ConnectPlasma connects to plasma store
-func ConnectPlasma(path string) (*PlasmaClient, error) {
-    cStr := C.CString(path)
-    ptr := C.plasma_connect(cStr)
-    C.free(unsafe.Pointer(cStr))
-    if ptr == nil {
-        return nil, fmt.Errorf("can't connect to %s", path)
-    }
-
-    client := &PlasmaClient{ptr}
-    runtime.SetFinalizer(client, func(c *PlasmaClient) {
-        c.Disconnect()
-    })
-
-    return client, nil
-}
-
-// WriteTable write a table to plasma store
-// If id is empty, a new random id will be generated
-func (c *PlasmaClient) WriteTable(t *Table, id string) (string, error) {
-    if len(id) == 0 {
-        var err error
-        id, err = RandomPlasmaID()
-        if err != nil {
-            return "", fmt.Errorf("can't create ID - %s", err)
-        }
-    } else {
-        if len(id) != PlasmaIDLength {
-            return "", fmt.Errorf("plasma id length should be %d", PlasmaIDLength)
-        }
-    }
-
-    cID := C.CString(id)
-    n := C.plasma_write(c.ptr, cID, t.ptr)
-    C.free(unsafe.Pointer(cID))
-
-    if n == -1 {
-        return "", fmt.Errorf("can't write table") // TODO
-    }
-
-    return id, nil
-}
-
-// Disconnect disconnects from plasma store
-func (c *PlasmaClient)	Disconnect() {
-    if c.ptr == nil {
-        return
-    }
-    C.plasma_disconnect(c.ptr)
-    c.ptr = nil
-}	
-
-// RandomPlasmaID return a new random plasma ID
-func RandomPlasmaID() (string, error) {
-    u := make([]byte, 10)
-    _, err := idRnd.Read(u)
-    if err != nil {
-        return "", err
-    }
-
-    u[8] = (u[8] | 0x80) & 0xBF // what does this do?
-    u[6] = (u[6] | 0x40) & 0x4F // what does this do?
-
-    return hex.EncodeToString(u), nil
 }

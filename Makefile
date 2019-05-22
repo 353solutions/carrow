@@ -1,6 +1,6 @@
 .PHONY: clean
 
-ARROW_SRC_DIR=/src/arrow/cpp/src
+ARROW_SRC_DIR=/src/arrow/cpp/src -I/opt/miniconda/include
 PLASMA_DB=/tmp/plasma.db
 
 all: libcarrow.a
@@ -32,6 +32,15 @@ plasma-client:
 			$(shell pkg-config --cflags --libs plasma) \
 			$(shell pkg-config --cflags --libs arrow) \
 			-I$(ARROW_SRC_DIR) \
+			--std=c++11 \
+			-o plasmac
+
+plasma-client-local:
+		g++ _misc/plasma.cc \
+			-g \
+			-larrow -lplasma \
+			-L/opt/miniconda/lib \
+			-I/opt/miniconda/include \
 			--std=c++11 \
 			-o plasmac
 

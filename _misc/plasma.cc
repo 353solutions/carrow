@@ -14,7 +14,7 @@ std::shared_ptr<arrow::Table> build_table() {
   auto status = builder.Finish(&array);
   if (!status.ok()) {
       std::cerr << "error: can't create array" << status.message() << "\n";
-      return NULL;
+      return nullptr;
   }
   std::vector<std::shared_ptr<arrow::Array>> arrays;
   arrays.push_back(array);
@@ -26,36 +26,6 @@ std::shared_ptr<arrow::Table> build_table() {
   std::shared_ptr<arrow::Schema> schema(new arrow::Schema(fields));
 
   return arrow::Table::Make(schema, arrays);
-}
-
-int64_t table_size(arrow::Table *table) {
-  arrow::TableBatchReader rdr(*table);
-  std::shared_ptr<arrow::RecordBatch> batch;
-  arrow::io::MockOutputStream stream;
-
-  std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
-  auto status = arrow::ipc::RecordBatchStreamWriter::Open(&stream, table->schema(), &writer);
-  if (!status.ok()) {
-    return -1;
-  }
-
-  while (true) {
-    auto status = rdr.ReadNext(&batch);
-    if (!status.ok()) {
-      return -1;
-    }
-
-    if (batch == nullptr) {
-      break;
-    }
-
-    status = writer->WriteRecordBatch(*batch, true);
-    if (!status.ok()) {
-      return -1;
-    }
-  }
-
-  return stream.GetExtentBytesWritten();
 }
 
 bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWriter> wtr) {
@@ -81,6 +51,30 @@ bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWri
   return true;
 }
 
+
+int64_t table_size(arrow::Table *table) {
+  arrow::TableBatchReader rdr(*table);
+  std::shared_ptr<arrow::RecordBatch> batch;
+  arrow::io::MockOutputStream stream;
+
+  std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
+  auto status = arrow::ipc::RecordBatchStreamWriter::Open(&stream, table->schema(), &writer);
+  if (!status.ok()) {
+    return -1;
+  }
+
+  if (!write_table(table, writer)) {
+    return -1;
+  }
+
+  status = writer->Close();
+  if (!status.ok()) {
+    return -1;
+  }
+
+  return stream.GetExtentBytesWritten();
+}
+
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "error: wrong number of arguments\n";
@@ -101,7 +95,7 @@ int main(int argc, char** argv) {
   }
 
   auto table = build_table();
-  if (table == NULL) {
+  if (table == nullptr) {
     std::cerr << "error: build\n";
     std::exit(1);
   }
@@ -113,15 +107,14 @@ int main(int argc, char** argv) {
 
   std::cout << "table size " << size << "\n";
 
-  plasma::ObjectID id = plasma::ObjectID::from_binary("00000000000000000009");
+  plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
   std::shared_ptr<arrow::Buffer> buf;
-  status = client.Create(id, size + 256, NULL, 0, &buf);
+  status = client.Create(id, size, nullptr, 0, &buf);
   if (!status.ok()) {
     std::cerr << "error: create obj: " << status.message() << "\n";
     std::exit(1);
   }
 
-  std::cout << "buf size = " << buf->size() << "\n";
   arrow::io::FixedSizeBufferWriter wb(buf);
   std::shared_ptr<arrow::ipc::RecordBatchWriter> wtr;
   status = arrow::ipc::RecordBatchStreamWriter::Open(&wb, table->schema(), &wtr);
@@ -133,6 +126,12 @@ int main(int argc, char** argv) {
     std::cerr << "error: can't write table\n";
     std::exit(1);
   }
+  status = wtr->Close();
+  if (!status.ok()) {
+    std::cerr << "error: close: " << status.message() << "\n";
+    std::exit(1);
+  }
+
   status = client.Seal(id);
   if (!status.ok()) {
     std::cerr << "error: seal: " << status.message() << "\n";
