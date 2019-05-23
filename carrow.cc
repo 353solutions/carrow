@@ -259,7 +259,6 @@ bool write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc
   arrow::TableBatchReader rdr(*table);
 
   while (true) {
-    debug_mark("WHILE");
     std::shared_ptr<arrow::RecordBatch> batch;
     auto status = rdr.ReadNext(&batch);
     warn(status);
@@ -271,7 +270,6 @@ bool write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc
       break;
     }
 
-    debug_mark("ReadNext");
     status = writer->WriteRecordBatch(*batch, true);
     warn(status);
     if (!status.ok()) {
@@ -333,7 +331,6 @@ int plasma_write(void *cp, void *tp, char *oid) {
     return -1;
   }
 
-  debug_mark("WRITE");
   if (!write_table(table, writer)) {
     // TODO: Error
     return -1;
