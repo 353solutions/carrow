@@ -23,9 +23,9 @@ const int FLOAT64_DTYPE = arrow::Type::DOUBLE;
   } while(false);
 
 
-void here() {
+void debug_mark(std::string msg = "HERE") {
   std::cout << "\033[1;31m";
-  std::cout << "<< HERE >>\n";
+  std::cout << "<< " <<  msg << " >>\n";
   std::cout << "\033[0m";
   std::cout.flush();
 }
@@ -76,8 +76,7 @@ void fields_free(void *vp) {
   if (vp == nullptr) {
     return;
   }
-  auto fields = (std::vector<std::shared_ptr<arrow::Field>> *)vp;
-  delete fields;
+  delete (std::vector<std::shared_ptr<arrow::Field>> *)vp;
 }
 
 void *schema_new(void *vp) {
@@ -117,8 +116,8 @@ void array_builder_append_float(void *vp, double value) {
 
 result_t array_builder_finish(void *vp) {
   auto builder = (arrow::ArrayBuilder *)vp;
-  std::shared_ptr<arrow::Array> out;
-  auto status = builder->Finish(&out);
+  std::shared_ptr<arrow::Array> array;
+  auto status = builder->Finish(&array);
   WARN(status);
   delete builder;
 
@@ -127,8 +126,8 @@ result_t array_builder_finish(void *vp) {
   if (!status.ok()) {
     res.err = status.ToString().c_str();
   } else {
-    res.obj = (void *)(out.get());
-    out.reset();
+    res.obj = (void *)(array.get());
+    array.reset();
   }
 
   // TODO: Will out delete the underlying array?
@@ -183,20 +182,25 @@ void columns_free(void *vp) {
   delete columns;
 }
 
+struct Table {
+  std::shared_ptr<arrow::Table> table;
+};
+
 void *table_new(void *sp, void *cp) {
   std::shared_ptr<arrow::Schema> schema((arrow::Schema *)sp);
   auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)cp;
 
-  auto table = arrow::Table::Make(schema, *columns);
-  return table.get();
+  auto ptr = new Table;
+  ptr->table = arrow::Table::Make(schema, *columns);
+  return ptr;
 }
 
 const char *table_validate(void *vp) {
   return nullptr;
   /*
-        auto table = (arrow::Table *)vp;
+        auto ptr = (Table *)vp;
         // FIXME: arrow::Table::Validate is pure virtual
-        auto status = table->Validate();
+        auto status = ptr->table->Validate();
         if (status.ok()) {
         return nullptr;
         }
@@ -206,21 +210,22 @@ const char *table_validate(void *vp) {
 }
 
 long long table_num_cols(void *vp) {
-  auto table = (arrow::Table *)vp;
-  return table->num_columns();
+  auto ptr = (Table *)vp;
+  return ptr->table->num_columns();
 }
 
 long long table_num_rows(void *vp) {
-  auto table = (arrow::Table *)vp;
-  return table->num_rows();
+  auto ptr = (Table *)vp;
+  return ptr->table->num_rows();
 }
 
 void table_free(void *vp) {
   if (vp == nullptr) {
     return;
   }
-  auto table = (arrow::Table *)vp;
-  delete table;
+
+  auto ptr = (Table *)vp;
+  delete ptr;
 }
 
 void *plasma_connect(char *path) {
@@ -236,11 +241,12 @@ void *plasma_connect(char *path) {
   return client;
 }
 
-bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWriter> writer) {
+bool write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc::RecordBatchWriter> writer) {
   arrow::TableBatchReader rdr(*table);
-  std::shared_ptr<arrow::RecordBatch> batch;
 
   while (true) {
+    debug_mark("WHILE");
+    std::shared_ptr<arrow::RecordBatch> batch;
     auto status = rdr.ReadNext(&batch);
     WARN(status);
     if (!status.ok()) {
@@ -251,6 +257,7 @@ bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWri
       break;
     }
 
+    debug_mark("ReadNext");
     status = writer->WriteRecordBatch(*batch, true);
     WARN(status);
     if (!status.ok()) {
@@ -262,9 +269,7 @@ bool write_table(arrow::Table *table, std::shared_ptr<arrow::ipc::RecordBatchWri
 }
 
 
-int64_t table_size(arrow::Table *table) {
-  here();
-
+int64_t table_size(std::shared_ptr<arrow::Table> table) {
   arrow::TableBatchReader rdr(*table);
   std::shared_ptr<arrow::RecordBatch> batch;
   arrow::io::MockOutputStream stream;
@@ -288,15 +293,17 @@ int64_t table_size(arrow::Table *table) {
 }
 
 int plasma_write(void *cp, void *tp, char *oid) {
+  // FIXME: null checks
   auto client = (plasma::PlasmaClient *)(cp);
-  auto table = (arrow::Table *)(tp);
+  auto ptr = (Table *)(tp);
+  auto table = ptr->table;
 
   auto size = table_size(table);
 
   plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
   std::shared_ptr<arrow::Buffer> buf;
   // TODO: Check padding
-  auto status = client->Create(id, size + 256, nullptr, 0, &buf);
+  auto status = client->Create(id, size, nullptr, 0, &buf);
   WARN(status);
   if (!status.ok()) {
     // TODO: Error
@@ -312,6 +319,7 @@ int plasma_write(void *cp, void *tp, char *oid) {
     return -1;
   }
 
+  debug_mark("WRITE");
   if (!write_table(table, writer)) {
     // TODO: Error
     return -1;

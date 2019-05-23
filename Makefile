@@ -26,6 +26,19 @@ build-docker:
 		-it --workdir=/src/carrow/ \
 		carrow:builder
 
+test:
+	go test -v ./...
+
+circleci:
+	docker build -f Dockerfile.test .
+
+benchmark:
+	go test  -run  Example -count 10000
+
+fresh: clean all
+
+# Playground
+
 plasma-client:
 		g++ _misc/plasma.cc \
 			-g \
@@ -49,13 +62,8 @@ plasma-server:
 		plasma_store -m 1000000 -s $(PLASMA_DB)
 
 
-test:
-	go test -v ./...
-
-circleci:
-	docker build -f Dockerfile.test .
-
-benchmark:
-	go test  -run  Example -count 10000
-
-fresh: clean all
+run-wtr:
+		PKG_CONFIG_PATH=/opt/miniconda/lib/pkgconfig make
+		PKG_CONFIG_PATH=/opt/miniconda/lib/pkgconfig \
+		LD_LIBRARY_PATH=/opt/miniconda/lib \
+			go run ./_misc/wtr.go -db /tmp/plasma.db -id $(ID)

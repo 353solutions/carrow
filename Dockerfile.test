@@ -27,6 +27,17 @@ RUN apt install -y -V libplasma-dev
 RUN git clone git://github.com/apache/arrow.git /src/arrow
 RUN cd /src/arrow && git checkout apache-arrow-0.13.0
 
+# Python bindings
+RUN cd /tmp && \
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda && \
+    rm Miniconda3-latest-Linux-x86_64.sh
+ENV PATH="/miniconda/bin:${PATH}"
+RUN conda install -y pyarrow numpy Cython ipython
+
+ENV PKG_CONFIG_PATH=/miniconda/lib/pkgconfig
+ENV LD_LIBRARY_PATH=/miniconda/lib
+
 WORKDIR /src/carrow
 COPY . .
 RUN make

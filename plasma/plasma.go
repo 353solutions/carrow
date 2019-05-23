@@ -1,14 +1,14 @@
 package plasma
 
 import (
-	"unsafe"
-	"fmt"
-	"runtime"
+    "unsafe"
+    "fmt"
+    "runtime"
     "math/rand"
     "time"
     "encoding/hex"
-	
-	"github.com/353solutions/carrow"
+    
+    "github.com/353solutions/carrow"
 )
 
 /*
@@ -85,15 +85,15 @@ func (oid ObjectID) String() string {
 
 // RandomID return a new random plasma ID
 func RandomID() (ObjectID, error) {
-	var oid ObjectID
+    var oid ObjectID
     _, err := idRnd.Read(oid[:])
     if err != nil {
         return oid, err
     }
 
     oid[8] = (oid[8] | 0x80) & 0xBF
-	oid[6] = (oid[6] | 0x40) & 0x4F
-	return oid, nil
+    oid[6] = (oid[6] | 0x40) & 0x4F
+    return oid, nil
 }
 
 // IDFromString converts a string to ObjectID
