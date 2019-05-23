@@ -61,7 +61,6 @@ plasma-server:
 		rm -f $(PLASMA_DB)
 		plasma_store -m 1000000 -s $(PLASMA_DB)
 
-
 run-wtr:
 		PKG_CONFIG_PATH=/opt/miniconda/lib/pkgconfig make
 		PKG_CONFIG_PATH=/opt/miniconda/lib/pkgconfig \

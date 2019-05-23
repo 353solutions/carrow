@@ -2,6 +2,7 @@ FROM ubuntu:18.04
 
 # Tools
 RUN apt-get update && apt-get install -y \
+    gdb \
     git \
     vim \ 
     wget \
