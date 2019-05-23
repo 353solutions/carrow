@@ -1,4 +1,8 @@
 #include <arrow/api.h>
+#include <arrow/io/api.h>
+#include <arrow/ipc/api.h>
+#include <plasma/client.h>
+
 #include <iostream>
 
 #include "carrow.h"
@@ -10,6 +14,21 @@ extern "C" {
 const int INTEGER64_DTYPE = arrow::Type::INT64;
 const int FLOAT64_DTYPE = arrow::Type::DOUBLE;
 
+/* TODO: Remove these */
+void warn(arrow::Status status) {
+  if (status.ok()) {
+    return;
+  }
+  std::cout << "CARROW:WARNING: " << status.message() << "\n";
+}
+
+void debug_mark(std::string msg = "HERE") {
+  std::cout << "\033[1;31m";
+  std::cout << "<< " <<  msg << " >>\n";
+  std::cout << "\033[0m";
+  std::cout.flush();
+}
+
 std::shared_ptr<arrow::DataType> data_type(int dtype) {
   switch (dtype) {
   case INTEGER64_DTYPE:
@@ -18,7 +37,7 @@ std::shared_ptr<arrow::DataType> data_type(int dtype) {
     return arrow::float64();
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void *field_new(char *name, int dtype) {
@@ -37,7 +56,7 @@ int field_dtype(void *vp) {
 }
 
 void field_free(void *vp) {
-  if (vp == NULL) {
+  if (vp == nullptr) {
     return;
   }
   auto field = (arrow::Field *)vp;
@@ -53,11 +72,10 @@ void fields_append(void *vp, void *fp) {
 }
 
 void fields_free(void *vp) {
-  if (vp == NULL) {
+  if (vp == nullptr) {
     return;
   }
-  auto fields = (std::vector<std::shared_ptr<arrow::Field>> *)vp;
-  delete fields;
+  delete (std::vector<std::shared_ptr<arrow::Field>> *)vp;
 }
 
 void *schema_new(void *vp) {
@@ -67,7 +85,7 @@ void *schema_new(void *vp) {
 }
 
 void schema_free(void *vp) {
-  if (vp == NULL) {
+  if (vp == nullptr) {
     return;
   }
   auto schema = (arrow::Schema *)vp;
@@ -82,7 +100,7 @@ void *array_builder_new(int dtype) {
     return new arrow::DoubleBuilder();
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void array_builder_append_int(void *vp, long long value) {
@@ -95,16 +113,26 @@ void array_builder_append_float(void *vp, double value) {
   builder->Append(value);
 }
 
-finish_result_t array_builder_finish(void *vp) {
-  auto builder = (arrow::ArrayBuilder *)vp;
-  std::shared_ptr<arrow::Array> out;
-  auto status = builder->Finish(&out);
+// TODO: See comment in struct Table
+struct Array {
+  std::shared_ptr<arrow::Array> array;
+};
 
-  finish_result_t res = {NULL, NULL};
+result_t array_builder_finish(void *vp) {
+  auto builder = (arrow::ArrayBuilder *)vp;
+  std::shared_ptr<arrow::Array> array;
+  auto status = builder->Finish(&array);
+  warn(status);
+  delete builder;
+
+
+  result_t res = {nullptr, nullptr};
   if (!status.ok()) {
     res.err = status.ToString().c_str();
   } else {
-    res.arr = (void *)(out.get());
+    auto obj = new Array;
+    obj->array = array;
+    res.obj = obj;
   }
 
   // TODO: Will out delete the underlying array?
@@ -112,18 +140,18 @@ finish_result_t array_builder_finish(void *vp) {
 }
 
 void array_free(void *vp) {
-  if (vp == NULL) {
+  if (vp == nullptr) {
     return;
   }
-  auto array = (arrow::Array *)vp;
-  delete array;
+
+  delete (Array *)vp;
 }
 
 void *column_new(void *fp, void *ap) {
   std::shared_ptr<arrow::Field> field((arrow::Field *)fp);
-  std::shared_ptr<arrow::Array> array((arrow::Array *)ap);
+  auto wrapper = (Array *)ap;
 
-  return new arrow::Column(field, array);
+  return new arrow::Column(field, wrapper->array);
 }
 
 int column_dtype(void *vp) {
@@ -132,7 +160,7 @@ int column_dtype(void *vp) {
 }
 
 void column_free(void *vp) {
-  if (vp == NULL) {
+  if (vp == nullptr) {
     return;
   }
   auto column = (arrow::Column *)vp;
@@ -159,22 +187,37 @@ void columns_free(void *vp) {
   delete columns;
 }
 
+/* TODO: Do it with template (currently not possible under extern "C")
+so we can unite with Array
+
+e.g.
+template <class T>
+struct Shared<T> {
+  std::shared_ptr<T> ptr;
+};
+*/
+
+struct Table {
+  std::shared_ptr<arrow::Table> table;
+};
+
 void *table_new(void *sp, void *cp) {
   std::shared_ptr<arrow::Schema> schema((arrow::Schema *)sp);
   auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)cp;
 
-  auto table = arrow::Table::Make(schema, *columns);
-  return table.get();
+  auto wrapper = new Table;
+  wrapper->table = arrow::Table::Make(schema, *columns);
+  return wrapper;
 }
 
 const char *table_validate(void *vp) {
-  return NULL;
+  return nullptr;
   /*
-        auto table = (arrow::Table *)vp;
+        auto wrapper = (Table *)vp;
         // FIXME: arrow::Table::Validate is pure virtual
-        auto status = table->Validate();
+        auto status = wrapper->table->Validate();
         if (status.ok()) {
-        return NULL;
+        return nullptr;
         }
 
         return status.ToString().c_str();
@@ -182,21 +225,135 @@ const char *table_validate(void *vp) {
 }
 
 long long table_num_cols(void *vp) {
-  auto table = (arrow::Table *)vp;
-  return table->num_columns();
+  auto wrapper = (Table *)vp;
+  return wrapper->table->num_columns();
 }
 
 long long table_num_rows(void *vp) {
-  auto table = (arrow::Table *)vp;
-  return table->num_rows();
+  auto wrapper = (Table *)vp;
+  return wrapper->table->num_rows();
 }
 
 void table_free(void *vp) {
-  if (vp == NULL) {
+  if (vp == nullptr) {
     return;
   }
-  auto table = (arrow::Table *)vp;
-  delete table;
+
+  delete (Table *)vp;
+}
+
+void *plasma_connect(char *path) {
+  plasma::PlasmaClient* client = new plasma::PlasmaClient();
+  auto status = client->Connect(path, "", 0);
+  warn(status);
+
+  if (!status.ok()) {
+    delete client;
+    return nullptr; // TODO: Errors
+  }
+
+  return client;
+}
+
+bool write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc::RecordBatchWriter> writer) {
+  arrow::TableBatchReader rdr(*table);
+
+  while (true) {
+    std::shared_ptr<arrow::RecordBatch> batch;
+    auto status = rdr.ReadNext(&batch);
+    warn(status);
+    if (!status.ok()) {
+      return false;
+    }
+
+    if (batch == nullptr) {
+      break;
+    }
+
+    status = writer->WriteRecordBatch(*batch, true);
+    warn(status);
+    if (!status.ok()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+int64_t table_size(std::shared_ptr<arrow::Table> table) {
+  arrow::TableBatchReader rdr(*table);
+  std::shared_ptr<arrow::RecordBatch> batch;
+  arrow::io::MockOutputStream stream;
+
+  std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
+  auto status = arrow::ipc::RecordBatchStreamWriter::Open(&stream, table->schema(), &writer);
+  warn(status);
+  if (!status.ok()) {
+    return -1;
+  }
+
+  write_table(table, writer);
+
+  status = writer->Close();
+  warn(status);
+  if (!status.ok()) {
+    return -1;
+  }
+
+  return stream.GetExtentBytesWritten();
+}
+
+int plasma_write(void *cp, void *tp, char *oid) {
+  // FIXME: null checks
+  auto client = (plasma::PlasmaClient *)(cp);
+  auto ptr = (Table *)(tp);
+  auto table = ptr->table;
+
+  auto size = table_size(table);
+
+  plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
+  std::shared_ptr<arrow::Buffer> buf;
+  // TODO: Check padding
+  auto status = client->Create(id, size, nullptr, 0, &buf);
+  warn(status);
+  if (!status.ok()) {
+    // TODO: Error
+    return -1;
+  }
+
+  arrow::io::FixedSizeBufferWriter bw(buf);
+  std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
+  status = arrow::ipc::RecordBatchStreamWriter::Open(&bw, table->schema(), &writer);
+  warn(status);
+  if (!status.ok()) {
+    // TODO: Error
+    return -1;
+  }
+
+  if (!write_table(table, writer)) {
+    // TODO: Error
+    return -1;
+  }
+
+  status = client->Seal(id);
+  warn(status);
+  if (!status.ok()) {
+    return -1;
+  }
+
+  return int(size);
+}
+
+void plasma_disconnect(void *vp) {
+  if (vp == nullptr) {
+    return;
+  }
+
+  auto client = (plasma::PlasmaClient*)(vp);
+  auto status = client->Disconnect();
+  warn(status);
+  delete client;
 }
 
 #ifdef __cplusplus

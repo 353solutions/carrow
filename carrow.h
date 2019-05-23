@@ -20,14 +20,15 @@ void fields_free(void *vp);
 void *schema_new(void *vp);
 void schema_free(void *vp);
 
+typedef struct {
+  const char *err;
+  void *obj;
+} result_t;
+
 void *array_builder_new(int dtype);
 void array_builder_append_int(void *vp, long long value);
 void array_builder_append_float(void *vp, double value);
-typedef struct {
-  const char *err;
-  void *arr;
-} finish_result_t;
-finish_result_t array_builder_finish(void *vp);
+result_t array_builder_finish(void *vp);
 
 void array_free(void *vp);
 
@@ -45,6 +46,10 @@ const char *table_validate(void *vp);
 long long table_num_cols(void *vp);
 long long table_num_rows(void *vp);
 void table_free(void *vp);
+
+void *plasma_connect(char *path);
+int plasma_write(void *cp, void *tp, char *oid);
+void plasma_disconnect(void *vp);
 
 #ifdef __cplusplus
 }
