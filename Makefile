@@ -66,3 +66,9 @@ run-wtr:
 		PKG_CONFIG_PATH=/opt/miniconda/lib/pkgconfig \
 		LD_LIBRARY_PATH=/opt/miniconda/lib \
 			go run ./_misc/wtr.go -db /tmp/plasma.db -id $(ID)
+
+gdb-wtr:
+	PKG_CONFIG_PATH=/opt/miniconda/lib/pkgconfig \
+	LD_LIBRARY_PATH=/opt/miniconda/lib  \
+		go build ./_misc/wtr.go
+	LD_LIBRARY_PATH=/opt/miniconda/lib gdb wtr
