@@ -14,14 +14,13 @@ extern "C" {
 const int INTEGER64_DTYPE = arrow::Type::INT64;
 const int FLOAT64_DTYPE = arrow::Type::DOUBLE;
 
-// TODO: Find a better way, this is for debugging ATM
-#define WARN(status) \
-  do { \
-    if (!status.ok()) { \
-      std::cout << "CARROW:WARNING: " << status.message() << "\n"; \
-    } \
-  } while(false);
-
+/* TODO: Remove these */
+void warn(arrow::Status status) {
+  if (status.ok()) {
+    return;
+  }
+  std::cout << "CARROW:WARNING: " << status.message() << "\n";
+}
 
 void debug_mark(std::string msg = "HERE") {
   std::cout << "\033[1;31m";
@@ -114,11 +113,16 @@ void array_builder_append_float(void *vp, double value) {
   builder->Append(value);
 }
 
+// TODO: See comment in struct Table
+struct Array {
+  std::shared_ptr<arrow::Array> array;
+};
+
 result_t array_builder_finish(void *vp) {
   auto builder = (arrow::ArrayBuilder *)vp;
   std::shared_ptr<arrow::Array> array;
   auto status = builder->Finish(&array);
-  WARN(status);
+  warn(status);
   delete builder;
 
 
@@ -126,8 +130,9 @@ result_t array_builder_finish(void *vp) {
   if (!status.ok()) {
     res.err = status.ToString().c_str();
   } else {
-    res.obj = (void *)(array.get());
-    array.reset();
+    auto obj = new Array;
+    obj->array = array;
+    res.obj = obj;
   }
 
   // TODO: Will out delete the underlying array?
@@ -138,15 +143,15 @@ void array_free(void *vp) {
   if (vp == nullptr) {
     return;
   }
-  auto array = (arrow::Array *)vp;
-  delete array;
+
+  delete (Array *)vp;
 }
 
 void *column_new(void *fp, void *ap) {
   std::shared_ptr<arrow::Field> field((arrow::Field *)fp);
-  std::shared_ptr<arrow::Array> array((arrow::Array *)ap);
+  auto wrapper = (Array *)ap;
 
-  return new arrow::Column(field, array);
+  return new arrow::Column(field, wrapper->array);
 }
 
 int column_dtype(void *vp) {
@@ -182,6 +187,16 @@ void columns_free(void *vp) {
   delete columns;
 }
 
+/* TODO: Do it with template (currently not possible under extern "C")
+so we can unite with Array
+
+e.g.
+template <class T>
+struct Shared<T> {
+  std::shared_ptr<T> ptr;
+};
+*/
+
 struct Table {
   std::shared_ptr<arrow::Table> table;
 };
@@ -190,17 +205,17 @@ void *table_new(void *sp, void *cp) {
   std::shared_ptr<arrow::Schema> schema((arrow::Schema *)sp);
   auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)cp;
 
-  auto ptr = new Table;
-  ptr->table = arrow::Table::Make(schema, *columns);
-  return ptr;
+  auto wrapper = new Table;
+  wrapper->table = arrow::Table::Make(schema, *columns);
+  return wrapper;
 }
 
 const char *table_validate(void *vp) {
   return nullptr;
   /*
-        auto ptr = (Table *)vp;
+        auto wrapper = (Table *)vp;
         // FIXME: arrow::Table::Validate is pure virtual
-        auto status = ptr->table->Validate();
+        auto status = wrapper->table->Validate();
         if (status.ok()) {
         return nullptr;
         }
@@ -210,13 +225,13 @@ const char *table_validate(void *vp) {
 }
 
 long long table_num_cols(void *vp) {
-  auto ptr = (Table *)vp;
-  return ptr->table->num_columns();
+  auto wrapper = (Table *)vp;
+  return wrapper->table->num_columns();
 }
 
 long long table_num_rows(void *vp) {
-  auto ptr = (Table *)vp;
-  return ptr->table->num_rows();
+  auto wrapper = (Table *)vp;
+  return wrapper->table->num_rows();
 }
 
 void table_free(void *vp) {
@@ -224,14 +239,13 @@ void table_free(void *vp) {
     return;
   }
 
-  auto ptr = (Table *)vp;
-  delete ptr;
+  delete (Table *)vp;
 }
 
 void *plasma_connect(char *path) {
   plasma::PlasmaClient* client = new plasma::PlasmaClient();
   auto status = client->Connect(path, "", 0);
-  WARN(status);
+  warn(status);
 
   if (!status.ok()) {
     delete client;
@@ -248,7 +262,7 @@ bool write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc
     debug_mark("WHILE");
     std::shared_ptr<arrow::RecordBatch> batch;
     auto status = rdr.ReadNext(&batch);
-    WARN(status);
+    warn(status);
     if (!status.ok()) {
       return false;
     }
@@ -259,7 +273,7 @@ bool write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc
 
     debug_mark("ReadNext");
     status = writer->WriteRecordBatch(*batch, true);
-    WARN(status);
+    warn(status);
     if (!status.ok()) {
       return false;
     }
@@ -276,7 +290,7 @@ int64_t table_size(std::shared_ptr<arrow::Table> table) {
 
   std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
   auto status = arrow::ipc::RecordBatchStreamWriter::Open(&stream, table->schema(), &writer);
-  WARN(status);
+  warn(status);
   if (!status.ok()) {
     return -1;
   }
@@ -284,7 +298,7 @@ int64_t table_size(std::shared_ptr<arrow::Table> table) {
   write_table(table, writer);
 
   status = writer->Close();
-  WARN(status);
+  warn(status);
   if (!status.ok()) {
     return -1;
   }
@@ -304,7 +318,7 @@ int plasma_write(void *cp, void *tp, char *oid) {
   std::shared_ptr<arrow::Buffer> buf;
   // TODO: Check padding
   auto status = client->Create(id, size, nullptr, 0, &buf);
-  WARN(status);
+  warn(status);
   if (!status.ok()) {
     // TODO: Error
     return -1;
@@ -313,7 +327,7 @@ int plasma_write(void *cp, void *tp, char *oid) {
   arrow::io::FixedSizeBufferWriter bw(buf);
   std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
   status = arrow::ipc::RecordBatchStreamWriter::Open(&bw, table->schema(), &writer);
-  WARN(status);
+  warn(status);
   if (!status.ok()) {
     // TODO: Error
     return -1;
@@ -322,6 +336,12 @@ int plasma_write(void *cp, void *tp, char *oid) {
   debug_mark("WRITE");
   if (!write_table(table, writer)) {
     // TODO: Error
+    return -1;
+  }
+
+  status = client->Seal(id);
+  warn(status);
+  if (!status.ok()) {
     return -1;
   }
 
@@ -335,7 +355,7 @@ void plasma_disconnect(void *vp) {
 
   auto client = (plasma::PlasmaClient*)(vp);
   auto status = client->Disconnect();
-  WARN(status);
+  warn(status);
   delete client;
 }
 
