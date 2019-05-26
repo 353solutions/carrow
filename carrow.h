@@ -1,9 +1,11 @@
-#ifndef _MY_PACKAGE_FOO_H_
-#define _MY_PACKAGE_FOO_H_
+#ifndef _CARROW_H_
+#define _CARROW_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
 
 extern const int INTEGER64_DTYPE;
 extern const int FLOAT64_DTYPE;
@@ -49,10 +51,11 @@ void table_free(void *vp);
 
 void *plasma_connect(char *path);
 int plasma_write(void *cp, void *tp, char *oid);
+void *plasma_read(void *cp, char *oid, int64_t timeout_ms);
 void plasma_disconnect(void *vp);
 
 #ifdef __cplusplus
 }
 #endif // extern "C"
 
-#endif
+#endif // #ifdef _CARROW_H_

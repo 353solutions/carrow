@@ -70,6 +70,20 @@ func (c *Client) WriteTable(t *carrow.Table, id ObjectID) error {
     return nil
 }
 
+// ReadTable reads a table from plasma store
+func (c *Client) ReadTable(id ObjectID, timeout time.Duration) (*carrow.Table, error) {
+    cID := C.CString(string(id[:]))
+    msec := C.int64_t(timeout / time.Millisecond)
+    ptr := C.plasma_read(c.ptr, cID, msec)
+    C.free(unsafe.Pointer(cID))
+
+    if ptr == nil {
+        return nil, fmt.Errorf("can't read %s", id)
+    }
+
+    return carrow.NewTableFromPtr(ptr), nil
+}
+
 // Disconnect disconnects from plasma store
 func (c *Client) Disconnect() {
     if c.ptr == nil {

@@ -4,6 +4,7 @@
 #include <plasma/client.h>
 
 #include <iostream>
+#include <vector>
 
 #include "carrow.h"
 
@@ -305,7 +306,11 @@ int64_t table_size(std::shared_ptr<arrow::Table> table) {
 }
 
 int plasma_write(void *cp, void *tp, char *oid) {
-  // FIXME: null checks
+  // TODO: Log
+  if ((cp == nullptr) || (tp == nullptr) || (oid == nullptr)) {
+    return -1;
+  }
+
   auto client = (plasma::PlasmaClient *)(cp);
   auto ptr = (Table *)(tp);
   auto table = ptr->table;
@@ -354,6 +359,67 @@ void plasma_disconnect(void *vp) {
   auto status = client->Disconnect();
   warn(status);
   delete client;
+}
+
+// TODO: Do we want allowing multiple IDs? (like the client Get)
+void *plasma_read(void *cp, char *oid, int64_t timeout_ms) {
+  // TODO: Log
+  if ((cp == nullptr) || (oid == nullptr)) {
+    return nullptr;
+  }
+
+  auto client = (plasma::PlasmaClient *)(cp);
+
+  plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
+  std::vector<plasma::ObjectID> ids;
+  ids.push_back(id);
+  std::vector<plasma::ObjectBuffer> buffers;
+
+  auto status = client->Get(ids, timeout_ms, &buffers);
+  warn(status);
+  if (!status.ok()) {
+    return nullptr;
+  }
+
+  // TODO: Support multiple buffers
+  if (buffers.size() != 1) {
+    std::cout << "CARROW:WARNING: more than one buffer for " << oid << "\n";
+    return nullptr;
+  }
+
+  auto buf_reader = std::make_shared<arrow::io::BufferReader>(buffers[0].data);
+  std::shared_ptr<arrow::ipc::RecordBatchReader> reader;
+  status = arrow::ipc::RecordBatchStreamReader::Open(buf_reader, &reader);
+  warn(status);
+  if (!status.ok()) {
+    return nullptr;
+  }
+
+  std::vector<std::shared_ptr<arrow::RecordBatch>> batches;
+  while (true)
+  {
+    std::shared_ptr<arrow::RecordBatch> batch;
+    status = reader->ReadNext(&batch);
+    warn(status);
+    if (!status.ok()) {
+      return nullptr;
+    }
+    if (batch == nullptr) {
+      break;
+    }
+    batches.push_back(batch);
+  }
+
+  std::shared_ptr<arrow::Table> table;
+  status = arrow::Table::FromRecordBatches(batches, &table);
+  warn(status);
+  if (!status.ok()) {
+    return nullptr;
+  }
+
+  auto ptr = new Table;
+  ptr->table = table;
+  return ptr;
 }
 
 #ifdef __cplusplus
