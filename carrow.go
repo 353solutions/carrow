@@ -5,6 +5,7 @@ import (
     "fmt"
     "runtime"
     "unsafe"
+    "time"
 )
 
 /*
@@ -23,16 +24,25 @@ type DType C.int
 
 // Supported data types
 var (
-    Integer64Type = DType(C.INTEGER64_DTYPE)
+    BoolType = DType(C.BOOL_DTYPE)
     Float64Type   = DType(C.FLOAT64_DTYPE)
+    Integer64Type = DType(C.INTEGER64_DTYPE)
+    StringType = DType(C.STRING_DTYPE)
+    TimestampType = DType(C.TIMESTAMP_DTYPE)
 )
 
 func (dt DType) String() string {
     switch dt {
-    case Integer64Type:
-        return "int64"
+    case BoolType:
+        return "bool"
     case Float64Type:
         return "float64"
+    case Integer64Type:
+        return "int64"
+    case StringType:
+        return "string"
+    case TimestampType:
+        return "timestamp"
     }
 
     return "<unknown>"
@@ -121,15 +131,53 @@ func NewSchema(fields []*Field) (*Schema, error) {
     return schema, nil
 }
 
+type builder struct {
+    ptr unsafe.Pointer
+}
+
+
+// BoolArrayBuilder used for building bool Arrays
+type BoolArrayBuilder struct {
+    builder
+}
+
+// NewBoolArrayBuilder returns a new BoolArrayBuilder
+func NewBoolArrayBuilder() *BoolArrayBuilder {
+    ptr := C.array_builder_new(C.int(BoolType))
+    return &BoolArrayBuilder{builder{ptr}}
+}
+
+func (b *builder) Finish() (*Array, error) {
+    out := C.array_builder_finish(b.ptr)
+    if out.err != nil {
+        err := fmt.Errorf(C.GoString(out.err))
+        C.free(unsafe.Pointer(out.err))
+        return nil, err
+    }
+
+    return &Array{out.obj}, nil
+}
+
+// Append appends a bool
+func (b *BoolArrayBuilder) Append(val bool) error {
+    var ival int
+    if val {
+        ival = 1
+    }
+    C.array_builder_append_bool(b.ptr, C.int(ival))
+    return nil
+}
+
+
 // Float64ArrayBuilder used for building float Arrays
 type Float64ArrayBuilder struct {
-    ptr unsafe.Pointer
+    builder
 }
 
 // NewFloat64ArrayBuilder returns a new Float64ArrayBuilder
 func NewFloat64ArrayBuilder() *Float64ArrayBuilder {
     ptr := C.array_builder_new(C.int(Float64Type))
-    return &Float64ArrayBuilder{ptr}
+    return &Float64ArrayBuilder{builder{ptr}}
 }
 
 // Append appends an integer
@@ -138,20 +186,15 @@ func (b *Float64ArrayBuilder) Append(val float64) error {
     return nil
 }
 
-// Finish creates the array
-func (b *Float64ArrayBuilder) Finish() (*Array, error) {
-    return builderFinish(b.ptr)
-}
-
 // Int64ArrayBuilder used for building integer Arrays
 type Int64ArrayBuilder struct {
-    ptr unsafe.Pointer
+    builder
 }
 
 // NewInt64ArrayBuilder returns a new Int64ArrayBuilder
 func NewInt64ArrayBuilder() *Int64ArrayBuilder {
     ptr := C.array_builder_new(C.int(Integer64Type))
-    return &Int64ArrayBuilder{ptr}
+    return &Int64ArrayBuilder{builder{ptr}}
 }
 
 // Append appends an integer
@@ -160,20 +203,41 @@ func (b *Int64ArrayBuilder) Append(val int64) error {
     return nil
 }
 
-// Finish creates the array
-func (b *Int64ArrayBuilder) Finish() (*Array, error) {
-    return builderFinish(b.ptr)
+// StringArrayBuilder used for building string Arrays
+type StringArrayBuilder struct {
+    builder
 }
 
-func builderFinish(ptr unsafe.Pointer) (*Array, error) {
-    out := C.array_builder_finish(ptr)
-    if out.err != nil {
-        err := fmt.Errorf(C.GoString(out.err))
-        C.free(unsafe.Pointer(out.err))
-        return nil, err
-    }
+// NewStringArrayBuilder returns a new StringArrayBuilder
+func NewStringArrayBuilder() *StringArrayBuilder {
+    ptr := C.array_builder_new(C.int(StringType))
+    return &StringArrayBuilder{builder{ptr}}
+}
 
-    return &Array{out.obj}, nil
+// Append appends a string
+func (b *StringArrayBuilder) Append(val string) error {
+    cStr := C.CString(val)
+    length := C.ulong(len(val))  // len is in bytes
+    C.array_builder_append_string(b.ptr, cStr, length)
+    C.free(unsafe.Pointer(cStr))
+    return nil
+}
+
+// TimestampArrayBuilder used for building bool Arrays
+type TimestampArrayBuilder struct {
+    builder
+}
+
+// NewTimestampArrayBuilder returns a new TimestampArrayBuilder
+func NewTimestampArrayBuilder() *TimestampArrayBuilder {
+    ptr := C.array_builder_new(C.int(TimestampType))
+    return &TimestampArrayBuilder{builder{ptr}}
+}
+
+// Append appends a timestamp
+func (b *TimestampArrayBuilder) Append(val time.Time) error {
+    C.array_builder_append_timestamp(b.ptr, C.longlong(val.UnixNano()))
+    return nil
 }
 
 // Array is arrow array

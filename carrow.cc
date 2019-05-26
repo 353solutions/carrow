@@ -12,8 +12,11 @@
 extern "C" {
 #endif
 
-const int INTEGER64_DTYPE = arrow::Type::INT64;
+const int BOOL_DTYPE = arrow::Type::BOOL;
 const int FLOAT64_DTYPE = arrow::Type::DOUBLE;
+const int INTEGER64_DTYPE = arrow::Type::INT64;
+const int STRING_DTYPE = arrow::Type::STRING;
+const int TIMESTAMP_DTYPE = arrow::Type::TIMESTAMP;
 
 /* TODO: Remove these */
 void warn(arrow::Status status) {
@@ -32,10 +35,16 @@ void debug_mark(std::string msg = "HERE") {
 
 std::shared_ptr<arrow::DataType> data_type(int dtype) {
   switch (dtype) {
-  case INTEGER64_DTYPE:
-    return arrow::int64();
-  case FLOAT64_DTYPE:
-    return arrow::float64();
+    case BOOL_DTYPE:
+      return arrow::boolean();
+    case FLOAT64_DTYPE:
+      return arrow::float64();
+    case INTEGER64_DTYPE:
+      return arrow::int64();
+    case STRING_DTYPE:
+      return arrow::utf8();
+    case TIMESTAMP_DTYPE:
+      return arrow::timestamp(arrow::TimeUnit::NANO);
   }
 
   return nullptr;
@@ -95,13 +104,30 @@ void schema_free(void *vp) {
 
 void *array_builder_new(int dtype) {
   switch (dtype) {
-  case INTEGER64_DTYPE:
-    return new arrow::Int64Builder();
+  case BOOL_DTYPE:
+    return new arrow::BooleanBuilder();
   case FLOAT64_DTYPE:
     return new arrow::DoubleBuilder();
+  case INTEGER64_DTYPE:
+    return new arrow::Int64Builder();
+  case STRING_DTYPE:
+    return new arrow::StringBuilder();
+  case TIMESTAMP_DTYPE:
+    return new arrow::TimestampBuilder(data_type(TIMESTAMP_DTYPE), nullptr);
   }
 
   return nullptr;
+}
+
+// TODO: Check for nulls in all append
+void array_builder_append_bool(void *vp, int value) {
+  auto builder = (arrow::BooleanBuilder *)vp;
+  builder->Append(bool(value));
+}
+
+void array_builder_append_float(void *vp, double value) {
+  auto builder = (arrow::DoubleBuilder *)vp;
+  builder->Append(value);
 }
 
 void array_builder_append_int(void *vp, long long value) {
@@ -109,10 +135,16 @@ void array_builder_append_int(void *vp, long long value) {
   builder->Append(value);
 }
 
-void array_builder_append_float(void *vp, double value) {
-  auto builder = (arrow::DoubleBuilder *)vp;
+void array_builder_append_string(void *vp, char *cp, size_t length) {
+  auto builder = (arrow::StringBuilder *)vp;
+  builder->Append(cp, length);
+}
+
+void array_builder_append_timestamp(void *vp, long long value) {
+  auto builder = (arrow::TimestampBuilder *)vp;
   builder->Append(value);
 }
+
 
 // TODO: See comment in struct Table
 struct Array {
@@ -436,7 +468,7 @@ int plasma_release(void *cp, char *oid) {
   if (!status.ok()) {
     return -1;
   }
-  
+
   return 0;
 }
 
