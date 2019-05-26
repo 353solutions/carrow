@@ -84,6 +84,20 @@ func (c *Client) ReadTable(id ObjectID, timeout time.Duration) (*carrow.Table, e
     return carrow.NewTableFromPtr(ptr), nil
 }
 
+// Release releases (deletes) object from plasma store
+func (c *Client) Release(id ObjectID) error {
+    cID := C.CString(string(id[:]))
+    out := C.plasma_release(c.ptr, cID)
+    C.free(unsafe.Pointer(cID))
+
+    if out != 0 {
+        return fmt.Errorf("can't release object %s", id)
+
+    }
+
+    return nil
+}
+
 // Disconnect disconnects from plasma store
 func (c *Client) Disconnect() {
     if c.ptr == nil {

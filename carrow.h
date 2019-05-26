@@ -52,6 +52,7 @@ void table_free(void *vp);
 void *plasma_connect(char *path);
 int plasma_write(void *cp, void *tp, char *oid);
 void *plasma_read(void *cp, char *oid, int64_t timeout_ms);
+int plasma_release(void *cp, char *oid);
 void plasma_disconnect(void *vp);
 
 #ifdef __cplusplus
