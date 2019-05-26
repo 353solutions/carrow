@@ -91,5 +91,8 @@ func main()  {
     fmt.Println("table2", table2)
     fmt.Println(table2.NumRows())
 
+    err = client.Release(oid)
+    fmt.Println("release", err)
+
     client.Disconnect()
 }

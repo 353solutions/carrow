@@ -422,6 +422,24 @@ void *plasma_read(void *cp, char *oid, int64_t timeout_ms) {
   return ptr;
 }
 
+int plasma_release(void *cp, char *oid) {
+  // TODO: Log
+  if ((cp == nullptr) || (oid == nullptr)) {
+    return -1;
+  }
+
+  auto client = (plasma::PlasmaClient *)(cp);
+  plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
+  auto status = client->Release(id);
+
+  warn(status);
+  if (!status.ok()) {
+    return -1;
+  }
+  
+  return 0;
+}
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
