@@ -7,8 +7,11 @@ extern "C" {
 
 #include <stdint.h>
 
-extern const int INTEGER64_DTYPE;
+extern const int BOOL_DTYPE;
 extern const int FLOAT64_DTYPE;
+extern const int INTEGER64_DTYPE;
+extern const int STRING_DTYPE;
+extern const int TIMESTAMP_DTYPE;
 
 void *field_new(char *name, int type);
 const char *field_name(void *field);
@@ -28,8 +31,11 @@ typedef struct {
 } result_t;
 
 void *array_builder_new(int dtype);
-void array_builder_append_int(void *vp, long long value);
+void array_builder_append_bool(void *vp, int value);
 void array_builder_append_float(void *vp, double value);
+void array_builder_append_int(void *vp, long long value);
+void array_builder_append_string(void *vp, char *value, size_t length);
+void array_builder_append_timestamp(void *vp, long long value);
 result_t array_builder_finish(void *vp);
 
 void array_free(void *vp);

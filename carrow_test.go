@@ -2,6 +2,7 @@ package carrow
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -24,11 +25,11 @@ func TestSchema(t *testing.T) {
 	require.NotNil(schema)
 }
 
-func TestIntBuilder(t *testing.T) {
+func TestBoolBuilder(t *testing.T) {
 	require := require.New(t)
-	b := NewInt64ArrayBuilder()
+	b := NewBoolArrayBuilder()
 	require.NotNil(b.ptr, "create")
-	b.Append(7)
+	b.Append(true)
 }
 
 func TestFloatBuilder(t *testing.T) {
@@ -36,4 +37,25 @@ func TestFloatBuilder(t *testing.T) {
 	b := NewFloat64ArrayBuilder()
 	require.NotNil(b.ptr, "create")
 	b.Append(7.2)
+}
+
+func TestIntBuilder(t *testing.T) {
+	require := require.New(t)
+	b := NewInt64ArrayBuilder()
+	require.NotNil(b.ptr, "create")
+	b.Append(7)
+}
+
+func TestStringBuilder(t *testing.T) {
+	require := require.New(t)
+	b := NewStringArrayBuilder()
+	require.NotNil(b.ptr, "create")
+	b.Append("hello")
+}
+
+func TestTimestampBuilder(t *testing.T) {
+	require := require.New(t)
+	b := NewTimestampArrayBuilder()
+	require.NotNil(b.ptr, "create")
+	b.Append(time.Now())
 }
