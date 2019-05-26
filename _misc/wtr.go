@@ -4,6 +4,7 @@ import (
     "fmt"
     "flag"
     "os"
+    "time"
 
     "github.com/353solutions/carrow"
     "github.com/353solutions/carrow/plasma"
@@ -81,5 +82,14 @@ func main()  {
         fmt.Println("error write", err)
         os.Exit(1)
     }
+
+    table2, err := client.ReadTable(oid, 100 * time.Millisecond)
+    if err != nil {
+        fmt.Println("error read", err)
+        os.Exit(1)
+    }
+    fmt.Println("table2", table2)
+    fmt.Println(table2.NumRows())
+
     client.Disconnect()
 }

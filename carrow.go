@@ -247,6 +247,12 @@ func NewTableFromColumns(columns []*Column) (*Table, error) {
     return table, nil
 }
 
+// NewTableFromPtr creates a new table from underlying C pointer
+// You probably shouldn't use this function
+func NewTableFromPtr(ptr unsafe.Pointer) *Table {
+    return &Table{ptr}
+}
+
 // NumRows returns the number of rows
 func (t *Table) NumRows() int {
     return int(C.table_num_rows(t.ptr))
