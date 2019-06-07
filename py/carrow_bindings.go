@@ -64,7 +64,7 @@ func CreateTable() unsafe.Pointer {
 	fmt.Printf("num cols: %d\n", table.NumCols())
 	fmt.Printf("num rows: %d\n", table.NumRows())
 
-	return table.Pointer()
+	return table.Ptr()
 }
 
 func main() {}
