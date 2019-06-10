@@ -30,13 +30,13 @@ RUN cd /src/arrow && git checkout apache-arrow-0.13.0
 # Python bindings
 RUN cd /tmp && \
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda && \
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda && \
     rm Miniconda3-latest-Linux-x86_64.sh
-ENV PATH="/miniconda/bin:${PATH}"
+ENV PATH="/opt/miniconda/bin:${PATH}"
 RUN conda install -c conda-forge -y pyarrow=0.13.0 numpy Cython ipython
 
-ENV PKG_CONFIG_PATH=/miniconda/lib/pkgconfig
-ENV LD_LIBRARY_PATH=/miniconda/lib
+ENV PKG_CONFIG_PATH=/opt/miniconda/lib/pkgconfig
+ENV LD_LIBRARY_PATH=/opt/miniconda/lib
 
 WORKDIR /src/carrow
 COPY . .

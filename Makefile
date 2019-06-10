@@ -1,20 +1,8 @@
-.PHONY: clean
-
-ARROW_SRC_DIR=/src/arrow/cpp/src -I/opt/miniconda/include
 PLASMA_DB=/tmp/plasma.db
-CXXOPT := -O2
+MINICONDA_ROOT := /opt/miniconda
 
-all: libcarrow.a
-	go build .
-
-libcarrow.a: carrow.o
-	ar r $@ $^
-
-%.o: %.cc
-	g++ -Wall -g $(CXXOPT) -std=c++11 -I$(ARROW_SRC_DIR) -o $@ -c $^
-
-clean:
-	rm -f *.o *.a
+all:
+	$(error please pick a target)
 
 get-arrow:
 		git clone git://github.com/apache/arrow.git ../arrow
@@ -36,8 +24,6 @@ circleci:
 benchmark:
 	go test  -run  Example -count 10000
 
-fresh: clean all
-
 # Playground
 
 plasma-client:
@@ -53,8 +39,8 @@ plasma-client-local:
 		g++ _misc/plasma.cc \
 			-g \
 			-larrow -lplasma \
-			-L/opt/miniconda/lib \
-			-I/opt/miniconda/include \
+			-L$(MINICONDA_ROOT)/lib \
+			-I$(MINICONDA_ROOT)/include \
 			--std=c++11 \
 			-o plasmac
 

@@ -36,9 +36,9 @@ ENV PATH="/usr/local/go/bin:${PATH}"
 # Python bindings
 RUN cd /tmp && \
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda && \
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda && \
     rm Miniconda3-latest-Linux-x86_64.sh
-ENV PATH="/miniconda/bin:${PATH}"
+ENV PATH="/opt/miniconda/bin:${PATH}"
 RUN conda install -c conda-forge -y pyarrow=0.13.0 numpy Cython ipython
 
 RUN git clone git://github.com/apache/arrow.git /src/arrow
