@@ -5,7 +5,7 @@ PLASMA_DB=/tmp/plasma.db
 CXXOPT := -O2
 
 all: libcarrow.a
-	go build .
+	go build ./...
 
 libcarrow.a: carrow.o
 	ar r $@ $^

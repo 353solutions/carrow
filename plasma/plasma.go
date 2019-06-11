@@ -39,16 +39,24 @@ type Client struct {
 // ObjectID is store ID for an object
 type ObjectID [IDLength]byte
 
+// TODO: United with one in carrow (internal?)
+func errFromResult(r C.result_t) error {
+    err := fmt.Errorf(C.GoString(r.err))
+    C.free(unsafe.Pointer(r.err))
+    return err
+}
+
 // Connect connects to plasma store
 func Connect(path string) (*Client, error) {
     cStr := C.CString(path)
-    ptr := C.plasma_connect(cStr)
+    r := C.plasma_connect(cStr)
     C.free(unsafe.Pointer(cStr))
-    if ptr == nil {
-        return nil, fmt.Errorf("can't connect to %s", path)
+
+    if r.err != nil {
+        return nil, errFromResult(r)
     }
 
-    client := &Client{ptr}
+    client := &Client{r.ptr}
     runtime.SetFinalizer(client, func(c *Client) {
         c.Disconnect()
     })
@@ -60,13 +68,13 @@ func Connect(path string) (*Client, error) {
 // If id is empty, a new random id will be generated
 func (c *Client) WriteTable(t *carrow.Table, id ObjectID) error {
     cID := C.CString(string(id[:]))
-    n := C.plasma_write(c.ptr, t.Ptr(), cID)
+    r := C.plasma_write(c.ptr, t.Ptr(), cID)
     C.free(unsafe.Pointer(cID))
 
-    if n == -1 {
-        return fmt.Errorf("can't write table") // TODO
+    if r.err != nil {
+        return errFromResult(r)
     }
-
+    // TODO: Return number of bytes written?
     return nil
 }
 
@@ -74,37 +82,41 @@ func (c *Client) WriteTable(t *carrow.Table, id ObjectID) error {
 func (c *Client) ReadTable(id ObjectID, timeout time.Duration) (*carrow.Table, error) {
     cID := C.CString(string(id[:]))
     msec := C.int64_t(timeout / time.Millisecond)
-    ptr := C.plasma_read(c.ptr, cID, msec)
+    r := C.plasma_read(c.ptr, cID, msec)
     C.free(unsafe.Pointer(cID))
 
-    if ptr == nil {
-        return nil, fmt.Errorf("can't read %s", id)
+    if r.err != nil {
+        return nil, errFromResult(r)
     }
 
-    return carrow.NewTableFromPtr(ptr), nil
+    return carrow.NewTableFromPtr(r.ptr), nil
 }
 
 // Release releases (deletes) object from plasma store
 func (c *Client) Release(id ObjectID) error {
     cID := C.CString(string(id[:]))
-    out := C.plasma_release(c.ptr, cID)
+    r := C.plasma_release(c.ptr, cID)
     C.free(unsafe.Pointer(cID))
 
-    if out != 0 {
-        return fmt.Errorf("can't release object %s", id)
-
+    if r.err != nil {
+        return errFromResult(r)
     }
 
     return nil
 }
 
 // Disconnect disconnects from plasma store
-func (c *Client) Disconnect() {
+func (c *Client) Disconnect() error {
     if c.ptr == nil {
-        return
+        return nil
     }
-    C.plasma_disconnect(c.ptr)
+
+    r := C.plasma_disconnect(c.ptr)
+    if r.err != nil {
+        return errFromResult(r)
+    }
     c.ptr = nil
+    return nil
 }	
 
 func (oid ObjectID) String() string {

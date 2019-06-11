@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 #include "carrow.h"
 
@@ -32,6 +33,13 @@ void debug_mark(std::string msg = "HERE") {
   std::cout << "\033[0m";
   std::cout.flush();
 }
+
+#define CARROW_RETURN_IF_ERROR(status) \
+  do { \
+    if (!status.ok()) { \
+      return result_t{status.message().c_str(), nullptr}; \
+    } \
+  } while (false)
 
 std::shared_ptr<arrow::DataType> data_type(int dtype) {
   switch (dtype) {
@@ -102,47 +110,67 @@ void schema_free(void *vp) {
   delete schema;
 }
 
-void *array_builder_new(int dtype) {
+result_t array_builder_new(int dtype) {
+  result_t res = {nullptr, nullptr};
   switch (dtype) {
   case BOOL_DTYPE:
-    return new arrow::BooleanBuilder();
+    res.ptr = new arrow::BooleanBuilder();
+    break;
   case FLOAT64_DTYPE:
-    return new arrow::DoubleBuilder();
+    res.ptr = new arrow::DoubleBuilder();
+    break;
   case INTEGER64_DTYPE:
-    return new arrow::Int64Builder();
+    res.ptr = new arrow::Int64Builder();
+    break;
   case STRING_DTYPE:
-    return new arrow::StringBuilder();
+    res.ptr = new arrow::StringBuilder();
+    break;
   case TIMESTAMP_DTYPE:
-    return new arrow::TimestampBuilder(data_type(TIMESTAMP_DTYPE), nullptr);
+    res.ptr = new arrow::TimestampBuilder(data_type(TIMESTAMP_DTYPE), nullptr);
+    break;
+  default:
+    std::ostringstream oss;
+    oss << "unknown dtype: " << dtype;
+    res.err = oss.str().c_str();
   }
 
-  return nullptr;
+  return res;
 }
 
 // TODO: Check for nulls in all append
-void array_builder_append_bool(void *vp, int value) {
+result_t array_builder_append_bool(void *vp, int value) {
   auto builder = (arrow::BooleanBuilder *)vp;
-  builder->Append(bool(value));
+  auto status = builder->Append(bool(value));
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
 }
 
-void array_builder_append_float(void *vp, double value) {
+result_t array_builder_append_float(void *vp, double value) {
   auto builder = (arrow::DoubleBuilder *)vp;
-  builder->Append(value);
+  auto status = builder->Append(value);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
 }
 
-void array_builder_append_int(void *vp, long long value) {
+result_t array_builder_append_int(void *vp, long long value) {
   auto builder = (arrow::Int64Builder *)vp;
-  builder->Append(value);
+  auto status = builder->Append(value);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
 }
 
-void array_builder_append_string(void *vp, char *cp, size_t length) {
+result_t array_builder_append_string(void *vp, char *cp, size_t length) {
   auto builder = (arrow::StringBuilder *)vp;
-  builder->Append(cp, length);
+  auto status = builder->Append(cp, length);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
 }
 
-void array_builder_append_timestamp(void *vp, long long value) {
+result_t array_builder_append_timestamp(void *vp, long long value) {
   auto builder = (arrow::TimestampBuilder *)vp;
-  builder->Append(value);
+  auto status = builder->Append(value);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
 }
 
 
@@ -155,21 +183,21 @@ result_t array_builder_finish(void *vp) {
   auto builder = (arrow::ArrayBuilder *)vp;
   std::shared_ptr<arrow::Array> array;
   auto status = builder->Finish(&array);
-  warn(status);
+  CARROW_RETURN_IF_ERROR(status);
   delete builder;
 
+  auto wrapper = new Array;
+  wrapper->array = array;
+  return result_t{nullptr, wrapper};
+}
 
-  result_t res = {nullptr, nullptr};
-  if (!status.ok()) {
-    res.err = status.ToString().c_str();
-  } else {
-    auto obj = new Array;
-    obj->array = array;
-    res.obj = obj;
+int64_t array_length(void *vp) {
+  if (vp == nullptr) {
+    return -1;
   }
 
-  // TODO: Will out delete the underlying array?
-  return res;
+  auto wrapper = (Array *)vp;
+  return wrapper->array->length();
 }
 
 void array_free(void *vp) {
@@ -238,23 +266,14 @@ void *table_new(void *sp, void *cp) {
   std::shared_ptr<arrow::Schema> schema((arrow::Schema *)sp);
   auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)cp;
 
+  auto table = arrow::Table::Make(schema, *columns);
+  if (table == nullptr) {
+    return nullptr;
+  }
+
   auto wrapper = new Table;
-  wrapper->table = arrow::Table::Make(schema, *columns);
+  wrapper->table = table;
   return wrapper;
-}
-
-const char *table_validate(void *vp) {
-  return nullptr;
-  /*
-        auto wrapper = (Table *)vp;
-        // FIXME: arrow::Table::Validate is pure virtual
-        auto status = wrapper->table->Validate();
-        if (status.ok()) {
-        return nullptr;
-        }
-
-        return status.ToString().c_str();
-  */
 }
 
 long long table_num_cols(void *vp) {
@@ -275,28 +294,26 @@ void table_free(void *vp) {
   delete (Table *)vp;
 }
 
-void *plasma_connect(char *path) {
+result_t plasma_connect(char *path) {
   plasma::PlasmaClient* client = new plasma::PlasmaClient();
   auto status = client->Connect(path, "", 0);
-  warn(status);
-
   if (!status.ok()) {
+    client->Disconnect();
     delete client;
-    return nullptr; // TODO: Errors
   }
 
-  return client;
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, client};
 }
 
-bool write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc::RecordBatchWriter> writer) {
+arrow::Status write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc::RecordBatchWriter> writer) {
   arrow::TableBatchReader rdr(*table);
 
   while (true) {
     std::shared_ptr<arrow::RecordBatch> batch;
     auto status = rdr.ReadNext(&batch);
-    warn(status);
     if (!status.ok()) {
-      return false;
+      return status;
     }
 
     if (batch == nullptr) {
@@ -304,100 +321,83 @@ bool write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc
     }
 
     status = writer->WriteRecordBatch(*batch, true);
-    warn(status);
     if (!status.ok()) {
-      return false;
+      return status;
     }
   }
 
-  return true;
+  return arrow::Status::OK();
 }
 
 
-int64_t table_size(std::shared_ptr<arrow::Table> table) {
+result_t table_size(std::shared_ptr<arrow::Table> table) {
   arrow::TableBatchReader rdr(*table);
   std::shared_ptr<arrow::RecordBatch> batch;
   arrow::io::MockOutputStream stream;
 
   std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
   auto status = arrow::ipc::RecordBatchStreamWriter::Open(&stream, table->schema(), &writer);
-  warn(status);
-  if (!status.ok()) {
-    return -1;
-  }
-
-  write_table(table, writer);
-
+  CARROW_RETURN_IF_ERROR(status);
+  status = write_table(table, writer);
+  CARROW_RETURN_IF_ERROR(status);
   status = writer->Close();
-  warn(status);
-  if (!status.ok()) {
-    return -1;
-  }
+  CARROW_RETURN_IF_ERROR(status);
 
-  return stream.GetExtentBytesWritten();
+  auto num_written = stream.GetExtentBytesWritten();
+  return result_t{nullptr, (void*)num_written};
 }
 
-int plasma_write(void *cp, void *tp, char *oid) {
-  // TODO: Log
+result_t plasma_write(void *cp, void *tp, char *oid) {
   if ((cp == nullptr) || (tp == nullptr) || (oid == nullptr)) {
-    return -1;
+    return result_t{"null pointer", nullptr};
   }
 
   auto client = (plasma::PlasmaClient *)(cp);
   auto ptr = (Table *)(tp);
   auto table = ptr->table;
 
-  auto size = table_size(table);
+  auto res = table_size(table);
+  if (res.err != nullptr) {
+    return res;
+  }
+
+  auto size = int64_t(res.ptr);
 
   plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
   std::shared_ptr<arrow::Buffer> buf;
   // TODO: Check padding
   auto status = client->Create(id, size, nullptr, 0, &buf);
-  warn(status);
-  if (!status.ok()) {
-    // TODO: Error
-    return -1;
-  }
+  CARROW_RETURN_IF_ERROR(status);
 
   arrow::io::FixedSizeBufferWriter bw(buf);
   std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
   status = arrow::ipc::RecordBatchStreamWriter::Open(&bw, table->schema(), &writer);
-  warn(status);
-  if (!status.ok()) {
-    // TODO: Error
-    return -1;
-  }
+  CARROW_RETURN_IF_ERROR(status);
 
-  if (!write_table(table, writer)) {
-    // TODO: Error
-    return -1;
-  }
-
+  status = write_table(table, writer);
+  CARROW_RETURN_IF_ERROR(status);
   status = client->Seal(id);
-  warn(status);
-  if (!status.ok()) {
-    return -1;
-  }
+  CARROW_RETURN_IF_ERROR(status);
 
-  return int(size);
+  return result_t{nullptr, (void *)size};
 }
 
-void plasma_disconnect(void *vp) {
+result_t plasma_disconnect(void *vp) {
   if (vp == nullptr) {
-    return;
+    return result_t{nullptr, nullptr};
   }
 
   auto client = (plasma::PlasmaClient*)(vp);
   auto status = client->Disconnect();
-  warn(status);
+  CARROW_RETURN_IF_ERROR(status);
   delete client;
+  return result_t{nullptr, nullptr};
 }
 
 // TODO: Do we want allowing multiple IDs? (like the client Get)
-void *plasma_read(void *cp, char *oid, int64_t timeout_ms) {
-  // TODO: Log
+result_t plasma_read(void *cp, char *oid, int64_t timeout_ms) {
   if ((cp == nullptr) || (oid == nullptr)) {
-    return nullptr;
+    return result_t{"null pointer", nullptr};
   }
 
   auto client = (plasma::PlasmaClient *)(cp);
@@ -408,34 +408,26 @@ void *plasma_read(void *cp, char *oid, int64_t timeout_ms) {
   std::vector<plasma::ObjectBuffer> buffers;
 
   auto status = client->Get(ids, timeout_ms, &buffers);
-  warn(status);
-  if (!status.ok()) {
-    return nullptr;
-  }
+  CARROW_RETURN_IF_ERROR(status);
 
   // TODO: Support multiple buffers
   if (buffers.size() != 1) {
-    std::cout << "CARROW:WARNING: more than one buffer for " << oid << "\n";
-    return nullptr;
+    std::ostringstream oss;
+    oss << "more than one buffer for " << oid;
+    return result_t{oss.str().c_str(), nullptr};
   }
 
   auto buf_reader = std::make_shared<arrow::io::BufferReader>(buffers[0].data);
   std::shared_ptr<arrow::ipc::RecordBatchReader> reader;
   status = arrow::ipc::RecordBatchStreamReader::Open(buf_reader, &reader);
-  warn(status);
-  if (!status.ok()) {
-    return nullptr;
-  }
+  CARROW_RETURN_IF_ERROR(status);
 
   std::vector<std::shared_ptr<arrow::RecordBatch>> batches;
   while (true)
   {
     std::shared_ptr<arrow::RecordBatch> batch;
     status = reader->ReadNext(&batch);
-    warn(status);
-    if (!status.ok()) {
-      return nullptr;
-    }
+    CARROW_RETURN_IF_ERROR(status);
     if (batch == nullptr) {
       break;
     }
@@ -444,32 +436,23 @@ void *plasma_read(void *cp, char *oid, int64_t timeout_ms) {
 
   std::shared_ptr<arrow::Table> table;
   status = arrow::Table::FromRecordBatches(batches, &table);
-  warn(status);
-  if (!status.ok()) {
-    return nullptr;
-  }
+  CARROW_RETURN_IF_ERROR(status);
 
   auto ptr = new Table;
   ptr->table = table;
-  return ptr;
+  return result_t{nullptr, ptr};
 }
 
-int plasma_release(void *cp, char *oid) {
-  // TODO: Log
+result_t plasma_release(void *cp, char *oid) {
   if ((cp == nullptr) || (oid == nullptr)) {
-    return -1;
+    return result_t{"null pointer", nullptr};
   }
 
   auto client = (plasma::PlasmaClient *)(cp);
   plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
   auto status = client->Release(id);
-
-  warn(status);
-  if (!status.ok()) {
-    return -1;
-  }
-
-  return 0;
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
 }
 
 #ifdef __cplusplus
