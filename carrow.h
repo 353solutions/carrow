@@ -13,6 +13,11 @@ extern const int INTEGER64_DTYPE;
 extern const int STRING_DTYPE;
 extern const int TIMESTAMP_DTYPE;
 
+typedef struct {
+  const char *err;
+  void *ptr;
+} result_t;
+
 void *field_new(char *name, int type);
 const char *field_name(void *field);
 int field_dtype(void *vp);
@@ -25,19 +30,15 @@ void fields_free(void *vp);
 void *schema_new(void *vp);
 void schema_free(void *vp);
 
-typedef struct {
-  const char *err;
-  void *obj;
-} result_t;
-
-void *array_builder_new(int dtype);
-void array_builder_append_bool(void *vp, int value);
-void array_builder_append_float(void *vp, double value);
-void array_builder_append_int(void *vp, long long value);
-void array_builder_append_string(void *vp, char *value, size_t length);
-void array_builder_append_timestamp(void *vp, long long value);
+result_t array_builder_new(int dtype);
+result_t array_builder_append_bool(void *vp, int value);
+result_t array_builder_append_float(void *vp, double value);
+result_t array_builder_append_int(void *vp, long long value);
+result_t array_builder_append_string(void *vp, char *value, size_t length);
+result_t array_builder_append_timestamp(void *vp, long long value);
 result_t array_builder_finish(void *vp);
 
+int64_t array_length(void *vp);
 void array_free(void *vp);
 
 void *column_new(void *field, void *array);
@@ -50,16 +51,15 @@ void columns_append(void *vp, void *cp);
 void columns_free(void *vp);
 
 void *table_new(void *sp, void *cp);
-const char *table_validate(void *vp);
 long long table_num_cols(void *vp);
 long long table_num_rows(void *vp);
 void table_free(void *vp);
 
-void *plasma_connect(char *path);
-int plasma_write(void *cp, void *tp, char *oid);
-void *plasma_read(void *cp, char *oid, int64_t timeout_ms);
-int plasma_release(void *cp, char *oid);
-void plasma_disconnect(void *vp);
+result_t plasma_connect(char *path);
+result_t plasma_write(void *cp, void *tp, char *oid);
+result_t plasma_read(void *cp, char *oid, int64_t timeout_ms);
+result_t plasma_release(void *cp, char *oid);
+result_t plasma_disconnect(void *vp);
 
 #ifdef __cplusplus
 }
