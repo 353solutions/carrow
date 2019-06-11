@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func TestRandomID(t *testing.T) {
 	require := require.New(t)
 
