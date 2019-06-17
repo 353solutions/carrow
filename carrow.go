@@ -20,7 +20,7 @@ import "C"
 
 // DType is a data type
 type DType C.int
-
+//go:generate go run gen.go
 // Supported data types
 var (
 	BoolType      = DType(C.BOOL_DTYPE)
