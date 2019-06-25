@@ -124,7 +124,7 @@ func NewSchema(fields []*Field) (*Schema, error) {
 	}
 	schema := &Schema{ptr}
 	runtime.SetFinalizer(schema, func(s *Schema) {
-		C.schema_free(schema.ptr)
+		C.schema_free(s.ptr)
 	})
 
 	return schema, nil
