@@ -5,4 +5,4 @@
 carrow
 plasmac
 wtrgen
-gen
+gen/*.go

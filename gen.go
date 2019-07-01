@@ -11,10 +11,16 @@ import (
 	"os"
 	"text/template"
 	"time"
+	"flag"
 )
+type data struct {
+	Type string
+  }
+  
 
 func main() {
-	const url = "https://github.com/golang/go/raw/master/CONTRIBUTORS"
+	var d data
+	flag.StringVar(&d.Type, "type", "", "The subtype used for the queue being generated")
 
 	// rsp, err := http.Get(url)
 	// die(err)
@@ -31,7 +37,7 @@ func main() {
 
 	// die(sc.Err())
 
-	f, err := os.Create("gen/contributors.go")
+	f, err := os.Create("gen/lib_generated.go")
 	die(err)
 	defer f.Close()
 
@@ -41,7 +47,7 @@ func main() {
 		Carls     []string
 	}{
 		Timestamp: time.Now(),
-		URL:       url,
+		URL:       "www.ynet.co.il",
 		Carls:     carls,
 	})
 }
