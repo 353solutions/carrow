@@ -21,33 +21,7 @@ import "C"
 // DType is a data type
 type DType C.int
 
-// Supported data types
-var (
-	BoolType      = DType(C.BOOL_DTYPE)
-	Float64Type   = DType(C.FLOAT64_DTYPE)
-	Integer64Type = DType(C.INTEGER64_DTYPE)
-	StringType    = DType(C.STRING_DTYPE)
-	TimestampType = DType(C.TIMESTAMP_DTYPE)
-)
-
-func (dt DType) String() string {
-	switch dt {
-	case BoolType:
-		return "bool"
-	case Float64Type:
-		return "float64"
-	case Integer64Type:
-		return "int64"
-	case StringType:
-		return "string"
-	case TimestampType:
-		return "timestamp"
-	}
-
-	return "<unknown>"
-}
-
-//go:generate go run gen.go -type=yoni
+//go:generate go run gen.go
 
 // Field is a field description
 type Field struct {
