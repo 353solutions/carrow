@@ -6,30 +6,30 @@
 // go generate
 package main
 
-import (	
+import (
 	"log"
 	"os"
 	"text/template"
 	"time"
 )
+
 type data struct {
 	Type string
-  }
-  
+}
 
 func main() {
-	arrowTypes := []string{"Bool"}
+	arrowTypes := []string{"Bool", "FLOAT64", "INTEGER64", "STRING", "TIMESTAMP"}
 
 	f, err := os.Create("gen/lib_generated.go")
 	die(err)
 	defer f.Close()
 
 	packageTemplate.Execute(f, struct {
-		Timestamp time.Time
-		ArrowTypes     []string
+		Timestamp  time.Time
+		ArrowTypes []string
 	}{
-		Timestamp: time.Now(),
-		ArrowTypes:     arrowTypes,
+		Timestamp:  time.Now(),
+		ArrowTypes: arrowTypes,
 	})
 }
 

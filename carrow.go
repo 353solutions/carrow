@@ -20,6 +20,7 @@ import "C"
 
 // DType is a data type
 type DType C.int
+
 // Supported data types
 var (
 	BoolType      = DType(C.BOOL_DTYPE)
@@ -45,6 +46,7 @@ func (dt DType) String() string {
 
 	return "<unknown>"
 }
+
 //go:generate go run gen.go -type=yoni
 
 // Field is a field description
