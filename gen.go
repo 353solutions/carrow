@@ -48,4 +48,15 @@ package carrow
 	 const int {{$val}}Type = arrow::Type::{{$val}};
 {{end}}
 
+func (dt DType) String() string {
+	switch dt {
+{{range $val := .ArrowTypes}}
+	case {{$val}}Type:
+		return "{{$val}}"
+{{end}}
+	}
+
+	return "<unknown>"
+}
+
 `))
