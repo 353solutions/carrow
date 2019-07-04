@@ -18,9 +18,6 @@ import (
 */
 import "C"
 
-// DType is a data type
-type DType C.int
-
 //go:generate go run gen.go
 //go:generate go fmt lib_generated.go
 
