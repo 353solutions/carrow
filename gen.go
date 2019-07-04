@@ -20,7 +20,7 @@ type data struct {
 func main() {
 	arrowTypes := []string{"Bool", "FLOAT64", "INTEGER64", "STRING", "TIMESTAMP"}
 
-	f, err := os.Create("gen/lib_generated.go")
+	f, err := os.Create("lib_generated.go")
 	die(err)
 	defer f.Close()
 
@@ -49,7 +49,7 @@ package carrow
 #cgo CXXFLAGS: -I/src/arrow/cpp/src
 // FIXME: plasma headers
 
-#include "../carrow.h"
+#include "carrow.h"
 #include <stdlib.h>
 */
 import "C"

@@ -22,7 +22,7 @@ import "C"
 type DType C.int
 
 //go:generate go run gen.go
-//go:generate go fmt gen/lib_generated.go
+//go:generate go fmt lib_generated.go
 
 // Field is a field description
 type Field struct {
