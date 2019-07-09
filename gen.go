@@ -67,6 +67,24 @@ var(
 {{- end}}
 )
 
+// Array Builders
+{{- range $val := .ArrowTypes}}
+
+	{{$val}}Type = DType(C.{{$val | ToUpper }}_DTYPE)
+	type {{$val}}ArrayBuilder struct {
+		builder
+	}
+
+	// New{{$val}}ArrayBuilder returns a new {{$val}}ArrayBuilder
+	func New{{$val}}ArrayBuilder() *{{$val}}ArrayBuilder {
+		r := C.array_builder_new(C.int({{$val}}Type))
+		if r.err != nil {
+			return nil
+		}
+		return &{{$val}}ArrayBuilder{builder{r.ptr}}
+	}
+{{- end}}
+
 func (dt DType) String() string {
 	switch dt {
 {{- range $val := .ArrowTypes}}
