@@ -114,21 +114,6 @@ func errFromResult(r C.result_t) error {
 	return err
 }
 
-// BoolArrayBuilder used for building bool Arrays
-type BoolArrayBuilder struct {
-	builder
-}
-
-// NewBoolArrayBuilder returns a new BoolArrayBuilder
-func NewBoolArrayBuilder() *BoolArrayBuilder {
-	r := C.array_builder_new(C.int(BoolType))
-	// TODO: Do we want to change the New function to return *type, error?
-	if r.err != nil {
-		return nil
-	}
-	return &BoolArrayBuilder{builder{r.ptr}}
-}
-
 // Finish returns array from builder
 // You can't use the builder after calling Finish
 func (b *builder) Finish() (*Array, error) {
@@ -151,20 +136,6 @@ func (b *BoolArrayBuilder) Append(val bool) error {
 		return errFromResult(r)
 	}
 	return nil
-}
-
-// Float64ArrayBuilder used for building float Arrays
-type Float64ArrayBuilder struct {
-	builder
-}
-
-// NewFloat64ArrayBuilder returns a new Float64ArrayBuilder
-func NewFloat64ArrayBuilder() *Float64ArrayBuilder {
-	r := C.array_builder_new(C.int(Float64Type))
-	if r.err != nil {
-		return nil
-	}
-	return &Float64ArrayBuilder{builder{r.ptr}}
 }
 
 // Append appends an integer
@@ -199,20 +170,6 @@ func (b *Int64ArrayBuilder) Append(val int64) error {
 	return nil
 }
 
-// StringArrayBuilder used for building string Arrays
-type StringArrayBuilder struct {
-	builder
-}
-
-// NewStringArrayBuilder returns a new StringArrayBuilder
-func NewStringArrayBuilder() *StringArrayBuilder {
-	r := C.array_builder_new(C.int(StringType))
-	if r.err != nil {
-		return nil
-	}
-	return &StringArrayBuilder{builder{r.ptr}}
-}
-
 // Append appends a string
 func (b *StringArrayBuilder) Append(val string) error {
 	cStr := C.CString(val)
@@ -224,20 +181,6 @@ func (b *StringArrayBuilder) Append(val string) error {
 	}
 
 	return nil
-}
-
-// TimestampArrayBuilder used for building bool Arrays
-type TimestampArrayBuilder struct {
-	builder
-}
-
-// NewTimestampArrayBuilder returns a new TimestampArrayBuilder
-func NewTimestampArrayBuilder() *TimestampArrayBuilder {
-	r := C.array_builder_new(C.int(TimestampType))
-	if r.err != nil {
-		return nil
-	}
-	return &TimestampArrayBuilder{builder{r.ptr}}
 }
 
 // Append appends a timestamp

@@ -70,7 +70,6 @@ var(
 // Array Builders
 {{- range $val := .ArrowTypes}}
 
-	{{$val}}Type = DType(C.{{$val | ToUpper }}_DTYPE)
 	type {{$val}}ArrayBuilder struct {
 		builder
 	}
