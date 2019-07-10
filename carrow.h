@@ -15,8 +15,19 @@ extern const int TIMESTAMP_DTYPE;
 
 typedef struct {
   const char *err;
-  void *ptr;
+  union {
+    void *ptr;
+    char *str;
+    int64_t i;
+    double f;
+  };
 } result_t;
+
+// access from Go
+void *result_ptr(result_t);
+const char *result_str(result_t);
+int64_t result_int(result_t);
+double result_float(result_t);
 
 void *field_new(char *name, int type);
 const char *field_name(void *field);
@@ -43,7 +54,7 @@ void array_free(void *vp);
 
 void *column_new(void *field, void *array);
 void *column_field(void *vp);
-int  column_dtype(void *vp);
+int column_dtype(void *vp);
 void column_free(void *vp);
 
 void *columns_new();

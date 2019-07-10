@@ -9,13 +9,13 @@ import (
 	"unsafe"
 
 	"github.com/353solutions/carrow"
+	"github.com/353solutions/carrow/result"
 )
 
 /*
 #cgo pkg-config: arrow plasma
 #cgo LDFLAGS: -lcarrow -L..
 #cgo CFLAGS: -I..
-// FIXME: plasma headers
 
 #include "carrow.h"
 #include <stdlib.h>
@@ -39,24 +39,17 @@ type Client struct {
 // ObjectID is store ID for an object
 type ObjectID [IDLength]byte
 
-// TODO: United with one in carrow (internal?)
-func errFromResult(r C.result_t) error {
-	err := fmt.Errorf(C.GoString(r.err))
-	C.free(unsafe.Pointer(r.err))
-	return err
-}
-
 // Connect connects to plasma store
 func Connect(path string) (*Client, error) {
 	cStr := C.CString(path)
-	r := C.plasma_connect(cStr)
+	r := result.New(C.plasma_connect(cStr))
 	C.free(unsafe.Pointer(cStr))
 
-	if r.err != nil {
-		return nil, errFromResult(r)
+	if err := r.Err(); err != nil {
+		return nil, err
 	}
 
-	client := &Client{r.ptr}
+	client := &Client{r.Ptr()}
 	runtime.SetFinalizer(client, func(c *Client) {
 		c.Disconnect()
 	})
@@ -68,41 +61,32 @@ func Connect(path string) (*Client, error) {
 // If id is empty, a new random id will be generated
 func (c *Client) WriteTable(t *carrow.Table, id ObjectID) error {
 	cID := C.CString(string(id[:]))
-	r := C.plasma_write(c.ptr, t.Ptr(), cID)
+	r := result.New(C.plasma_write(c.ptr, t.Ptr(), cID))
 	C.free(unsafe.Pointer(cID))
-
-	if r.err != nil {
-		return errFromResult(r)
-	}
 	// TODO: Return number of bytes written?
-	return nil
+	return r.Err()
 }
 
 // ReadTable reads a table from plasma store
 func (c *Client) ReadTable(id ObjectID, timeout time.Duration) (*carrow.Table, error) {
 	cID := C.CString(string(id[:]))
 	msec := C.int64_t(timeout / time.Millisecond)
-	r := C.plasma_read(c.ptr, cID, msec)
+	r := result.New(C.plasma_read(c.ptr, cID, msec))
 	C.free(unsafe.Pointer(cID))
 
-	if r.err != nil {
-		return nil, errFromResult(r)
+	if err := r.Err(); err != nil {
+		return nil, err
 	}
 
-	return carrow.NewTableFromPtr(r.ptr), nil
+	return carrow.NewTableFromPtr(r.Ptr()), nil
 }
 
 // Release releases (deletes) object from plasma store
 func (c *Client) Release(id ObjectID) error {
 	cID := C.CString(string(id[:]))
-	r := C.plasma_release(c.ptr, cID)
+	r := result.New(C.plasma_release(c.ptr, cID))
 	C.free(unsafe.Pointer(cID))
-
-	if r.err != nil {
-		return errFromResult(r)
-	}
-
-	return nil
+	return r.Err()
 }
 
 // Disconnect disconnects from plasma store
@@ -111,9 +95,9 @@ func (c *Client) Disconnect() error {
 		return nil
 	}
 
-	r := C.plasma_disconnect(c.ptr)
-	if r.err != nil {
-		return errFromResult(r)
+	r := result.New(C.plasma_disconnect(c.ptr))
+	if err := r.Err(); err != nil {
+		return err
 	}
 	c.ptr = nil
 	return nil

@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y -V \
 
 # Go installation
 RUN cd /tmp && \
-    wget https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.12.5.linux-amd64.tar.gz
+    wget https://dl.google.com/go/go1.12.7.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.12.7.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 # Python bindings
@@ -25,11 +25,13 @@ RUN conda install -c conda-forge -y \
     ipython \
     numpy \
     pkg-config \
-    pyarrow=0.13.0
+    pyarrow=0.14.0
 
 ENV LD_LIBRARY_PATH=/miniconda/lib
+ENV PKG_CONFIG_PATH=/miniconda/lib/pkgconfig
 
 WORKDIR /src/carrow
 COPY . .
+RUN make clean
 RUN make
 RUN go test -v ./...
