@@ -9,7 +9,7 @@ import (
 	"unsafe"
 
 	"github.com/353solutions/carrow"
-	"github.com/353solutions/carrow/result"
+	"github.com/353solutions/carrow/internal/result"
 )
 
 /*
