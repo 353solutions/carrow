@@ -19,7 +19,7 @@ gen:
 	g++ -Wall -g $(CXXOPT) -std=c++11 -I$(ARROW_INC) -o $@ -c $^
 
 clean:
-	rm -f *.o *.a
+	rm -f *.o *.a *generate*.go
 
 get-arrow:
 		git clone git://github.com/apache/arrow.git ../arrow

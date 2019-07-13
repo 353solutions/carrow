@@ -20,7 +20,7 @@ type data struct {
 
 func main() {
 	arrowTypes := []string{"Bool", "Float64", "Integer64", "String", "Timestamp"}
-	f, err := os.Create("lib_generated.go")
+	f, err := os.Create("carrow_generated.go")
 	die(err)
 	defer f.Close()
 

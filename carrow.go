@@ -19,7 +19,7 @@ import (
 import "C"
 
 //go:generate go run gen.go
-//go:generate go fmt lib_generated.go
+//go:generate go fmt carrow_generated.go
 
 // Field is a field description
 type Field struct {
