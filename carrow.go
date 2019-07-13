@@ -147,22 +147,8 @@ func (b *Float64ArrayBuilder) Append(val float64) error {
 	return nil
 }
 
-// Int64ArrayBuilder used for building integer Arrays
-type Int64ArrayBuilder struct {
-	builder
-}
-
-// NewInt64ArrayBuilder returns a new Int64ArrayBuilder
-func NewInt64ArrayBuilder() *Int64ArrayBuilder {
-	r := C.array_builder_new(C.int(Integer64Type))
-	if r.err != nil {
-		return nil
-	}
-	return &Int64ArrayBuilder{builder{r.ptr}}
-}
-
 // Append appends an integer
-func (b *Int64ArrayBuilder) Append(val int64) error {
+func (b *Integer64ArrayBuilder) Append(val int64) error {
 	r := C.array_builder_append_int(b.ptr, C.longlong(val))
 	if r.err != nil {
 		return errFromResult(r)
