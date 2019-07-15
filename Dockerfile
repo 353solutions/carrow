@@ -22,13 +22,13 @@ RUN cd /tmp && \
     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
     bash Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda && \
     rm Miniconda3-latest-Linux-x86_64.sh
+ENV PATH=/miniconda/bin:${PATH}
 RUN conda install -c conda-forge -y \
     Cython \
     ipython \
     numpy \
     pkg-config \
     pyarrow=0.13.0
-ENV PATH=/miniconda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/miniconda/lib
 ENV PKG_CONFIG_PATH=/miniconda/lib/pkgconfig
 
