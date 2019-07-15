@@ -30,4 +30,5 @@ RUN conda install -c conda-forge -y \
     pkg-config \
     pyarrow=0.13.0
 
+ENV LD_LIBRARY_PATH=/miniconda/lib
 WORKDIR /src/carrow

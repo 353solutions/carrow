@@ -4,5 +4,6 @@
 .idea
 .vscode
 carrow
+carrow_generated.go
 plasmac
 wtr

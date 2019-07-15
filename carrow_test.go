@@ -41,7 +41,7 @@ func TestFloatBuilder(t *testing.T) {
 
 func TestIntBuilder(t *testing.T) {
 	require := require.New(t)
-	b := NewInt64ArrayBuilder()
+	b := NewInteger64ArrayBuilder()
 	require.NotNil(b.ptr, "create")
 	b.Append(7)
 }
