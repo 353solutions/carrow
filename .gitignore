@@ -1,5 +1,6 @@
 *.a
 *.o
+.clang_complete
 .idea
 .vscode
 carrow

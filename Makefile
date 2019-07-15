@@ -3,8 +3,8 @@
 ARROW_INC = $(shell pkg-config --cflags arrow)
 PLASMA_DB = /tmp/plasma.db
 CXXOPT := -O2
-LD_LIBRARY_PATH := /miniconda/lib
-PKG_CONFIG_PATH := /miniconda/lib/pkgconfig
+LD_LIBRARY_PATH ?= /miniconda/lib
+PKG_CONFIG_PATH ?= /miniconda/lib/pkgconfig
 
 all: libcarrow.a
 	go build ./...
@@ -13,7 +13,7 @@ libcarrow.a: carrow.o
 	ar r $@ $^
 
 %.o: %.cc
-	g++ -Wall -g $(CXXOPT) -std=c++11 -I$(ARROW_INC) -o $@ -c $^
+	g++ -Wall -g $(CXXOPT) -std=c++11 $(ARROW_INC) -o $@ -c $^
 
 clean:
 	rm -f *.o *.a
