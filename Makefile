@@ -3,8 +3,8 @@
 ARROW_INC = $(shell pkg-config --cflags arrow)
 PLASMA_DB = /tmp/plasma.db
 CXXOPT := -O2
-LD_LIBRARY_PATH := /miniconda/lib
-PKG_CONFIG_PATH := /miniconda/lib/pkgconfig
+LD_LIBRARY_PATH ?= /miniconda/lib
+PKG_CONFIG_PATH ?= /miniconda/lib/pkgconfig
 
 all: libcarrow.a
 	go build ./...
@@ -29,8 +29,7 @@ build-docker:
 		-it --workdir=/src/carrow/ \
 		carrow:builder
 
-test: clean
-	make libcarrow.a
+test:
 	go test -v ./...
 
 circleci:
@@ -55,9 +54,7 @@ plasma-client:
 plasma-client-local:
 		g++ _misc/plasma.cc \
 			-g \
-			-larrow -lplasma \
-			-L/opt/miniconda/lib \
-			-I/opt/miniconda/include \
+			$(shell pkg-config --libs --cflags arrow plasma)
 			--std=c++11 \
 			-o plasmac
 

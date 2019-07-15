@@ -1,5 +1,3 @@
-// TODO: Should this be in internal?
-
 package result
 
 import (
