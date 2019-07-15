@@ -28,6 +28,7 @@ void *result_ptr(result_t);
 const char *result_str(result_t);
 int64_t result_int(result_t);
 double result_float(result_t);
+result_t result_new(const char *error);
 
 void *field_new(char *name, int type);
 const char *field_name(void *field);

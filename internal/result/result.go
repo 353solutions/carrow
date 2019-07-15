@@ -1,6 +1,7 @@
 package result
 
 import (
+	"errors"
 	"unsafe"
 )
 
@@ -24,7 +25,7 @@ type Result struct {
 func New(r C.result_t) Result {
 	var err error
 	if r.err != nil {
-		err = fmt.Errorf(C.GoString(r.err))
+		err = errors.New(C.GoString(r.err))
 		C.free(r.err)
 	}
 
@@ -51,8 +52,8 @@ func (r Result) Ptr() unsafe.Pointer {
 }
 
 // Int returns int value
-func (r Result) Int() int {
-	return int(C.result_int(r.r))
+func (r Result) Int() int64 {
+	return int64(C.result_int(r.r))
 }
 
 // Float returns float value

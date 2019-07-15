@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <string.h>
 #include <vector>
 
 #include "carrow.h"
@@ -22,7 +23,7 @@ const int TIMESTAMP_DTYPE = arrow::Type::TIMESTAMP;
 #define CARROW_RETURN_IF_ERROR(status)                                         \
   do {                                                                         \
     if (!status.ok()) {                                                        \
-      return new_result(status.message().c_str());                             \
+      return result_new(status.message().c_str());                             \
     }                                                                          \
   } while (false)
 
@@ -31,9 +32,11 @@ const char *result_str(result_t r) { return r.str; }
 int64_t result_int(result_t r) { return r.i; }
 double result_float(result_t r) { return r.f; }
 
-static result_t new_result(const char *err = nullptr) {
+result_t result_new(const char *error) {
   result_t r;
-  r.err = err;
+  if (error != nullptr) {
+    r.err = strdup(error);
+  }
   r.ptr = nullptr;
   r.str = nullptr;
   return r;
@@ -109,7 +112,7 @@ void schema_free(void *vp) {
 }
 
 result_t array_builder_new(int dtype) {
-  auto res = new_result();
+  auto res = result_new(nullptr);
   switch (dtype) {
   case BOOL_DTYPE:
     res.ptr = new arrow::BooleanBuilder();
@@ -140,35 +143,35 @@ result_t array_builder_append_bool(void *vp, int value) {
   auto builder = (arrow::BooleanBuilder *)vp;
   auto status = builder->Append(bool(value));
   CARROW_RETURN_IF_ERROR(status);
-  return new_result();
+  return result_new(nullptr);
 }
 
 result_t array_builder_append_float(void *vp, double value) {
   auto builder = (arrow::DoubleBuilder *)vp;
   auto status = builder->Append(value);
   CARROW_RETURN_IF_ERROR(status);
-  return new_result();
+  return result_new(nullptr);
 }
 
 result_t array_builder_append_int(void *vp, long long value) {
   auto builder = (arrow::Int64Builder *)vp;
   auto status = builder->Append(value);
   CARROW_RETURN_IF_ERROR(status);
-  return new_result();
+  return result_new(nullptr);
 }
 
 result_t array_builder_append_string(void *vp, char *cp, size_t length) {
   auto builder = (arrow::StringBuilder *)vp;
   auto status = builder->Append(cp, length);
   CARROW_RETURN_IF_ERROR(status);
-  return new_result();
+  return result_new(nullptr);
 }
 
 result_t array_builder_append_timestamp(void *vp, long long value) {
   auto builder = (arrow::TimestampBuilder *)vp;
   auto status = builder->Append(value);
   CARROW_RETURN_IF_ERROR(status);
-  return new_result();
+  return result_new(nullptr);
 }
 
 // TODO: See comment in struct Table
@@ -185,7 +188,7 @@ result_t array_builder_finish(void *vp) {
 
   auto wrapper = new Array;
   wrapper->array = array;
-  auto r = new_result();
+  auto r = result_new(nullptr);
   r.ptr = wrapper;
   return r;
 }
@@ -302,7 +305,7 @@ result_t plasma_connect(char *path) {
   }
 
   CARROW_RETURN_IF_ERROR(status);
-  auto r = new_result();
+  auto r = result_new(nullptr);
   r.ptr = client;
   return r;
 }
@@ -347,14 +350,14 @@ result_t table_size(std::shared_ptr<arrow::Table> table) {
   CARROW_RETURN_IF_ERROR(status);
 
   auto num_written = stream.GetExtentBytesWritten();
-  auto result = new_result();
+  auto result = result_new(nullptr);
   result.i = num_written;
   return result;
 }
 
 result_t plasma_write(void *cp, void *tp, char *oid) {
   if ((cp == nullptr) || (tp == nullptr) || (oid == nullptr)) {
-    return new_result("null pointer");
+    return result_new("null pointer");
   }
 
   auto client = (plasma::PlasmaClient *)(cp);
@@ -385,27 +388,27 @@ result_t plasma_write(void *cp, void *tp, char *oid) {
   status = client->Seal(id);
   CARROW_RETURN_IF_ERROR(status);
 
-  auto r = new_result();
+  auto r = result_new(nullptr);
   r.i = size;
   return r;
 }
 
 result_t plasma_disconnect(void *vp) {
   if (vp == nullptr) {
-    return new_result("null poiner");
+    return result_new("null poiner");
   }
 
   auto client = (plasma::PlasmaClient *)(vp);
   auto status = client->Disconnect();
   CARROW_RETURN_IF_ERROR(status);
   delete client;
-  return new_result();
+  return result_new(nullptr);
 }
 
 // TODO: Do we want allowing multiple IDs? (like the client Get)
 result_t plasma_read(void *cp, char *oid, int64_t timeout_ms) {
   if ((cp == nullptr) || (oid == nullptr)) {
-    return new_result("null pointer");
+    return result_new("null pointer");
   }
 
   auto client = (plasma::PlasmaClient *)(cp);
@@ -422,7 +425,7 @@ result_t plasma_read(void *cp, char *oid, int64_t timeout_ms) {
   if (buffers.size() != 1) {
     std::ostringstream oss;
     oss << "more than one buffer for " << oid;
-    return new_result(oss.str().c_str());
+    return result_new(oss.str().c_str());
   }
 
   auto buf_reader = std::make_shared<arrow::io::BufferReader>(buffers[0].data);
@@ -447,21 +450,21 @@ result_t plasma_read(void *cp, char *oid, int64_t timeout_ms) {
 
   auto ptr = new Table;
   ptr->table = table;
-  auto result = new_result();
+  auto result = result_new(nullptr);
   result.ptr = ptr;
   return result;
 }
 
 result_t plasma_release(void *cp, char *oid) {
   if ((cp == nullptr) || (oid == nullptr)) {
-    return new_result("null pointer");
+    return result_new("null pointer");
   }
 
   auto client = (plasma::PlasmaClient *)(cp);
   plasma::ObjectID id = plasma::ObjectID::from_binary(oid);
   auto status = client->Release(id);
   CARROW_RETURN_IF_ERROR(status);
-  return new_result();
+  return result_new(nullptr);
 }
 
 #ifdef __cplusplus
