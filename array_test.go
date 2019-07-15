@@ -34,7 +34,7 @@ func TestArrayBoolGet(t *testing.T) {
 
 func TestArrayIntGet(t *testing.T) {
 	require := require.New(t)
-	b := NewInt64ArrayBuilder()
+	b := NewInteger64ArrayBuilder()
 	require.NotNil(b.ptr, "create")
 
 	for i := int64(0); i < testArrSize; i++ {
