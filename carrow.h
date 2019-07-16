@@ -33,17 +33,23 @@ void schema_free(void *vp);
 result_t array_builder_new(int dtype);
 result_t array_builder_append_bool(void *vp, int value);
 result_t array_builder_append_float(void *vp, double value);
-result_t array_builder_append_int(void *vp, long long value);
+result_t array_builder_append_int(void *vp, int64_t value);
 result_t array_builder_append_string(void *vp, char *value, size_t length);
 result_t array_builder_append_timestamp(void *vp, long long value);
 result_t array_builder_finish(void *vp);
 
 int64_t array_length(void *vp);
+int array_bool_at(void *vp, long long i);
+int64_t array_int_at(void *vp, long long i);
+double array_float_at(void *vp, long long i);
+const char *array_str_at(void *vp, long long i);
+int64_t array_timestamp_at(void *vp, long long i);
+
 void array_free(void *vp);
 
 void *column_new(void *field, void *array);
 void *column_field(void *vp);
-int  column_dtype(void *vp);
+int column_dtype(void *vp);
 void column_free(void *vp);
 
 void *columns_new();

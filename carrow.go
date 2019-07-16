@@ -149,7 +149,7 @@ func (b *Float64ArrayBuilder) Append(val float64) error {
 
 // Append appends an integer
 func (b *Integer64ArrayBuilder) Append(val int64) error {
-	r := C.array_builder_append_int(b.ptr, C.longlong(val))
+	r := C.array_builder_append_int(b.ptr, C.long(val))
 	if r.err != nil {
 		return errFromResult(r)
 	}
@@ -187,6 +187,51 @@ type Array struct {
 func (a *Array) Length() int {
 	i := C.array_length(a.ptr)
 	return int(i)
+}
+
+// BoolAt returns bool at location
+func (a *Array) BoolAt(i int) (bool, error) {
+	val := C.array_bool_at(a.ptr, C.longlong(i))
+	if val == -1 {
+		return false, fmt.Errorf("can't get bool at %d", i)
+	}
+
+	if val == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// Float64At returns float at location
+func (a *Array) Float64At(i int) (float64, error) {
+	val := C.array_float_at(a.ptr, C.longlong(i))
+	return float64(val), nil
+}
+
+// Int64At returns integer at location
+func (a *Array) Int64At(i int) (int64, error) {
+	val := C.array_int_at(a.ptr, C.longlong(i))
+	return int64(val), nil
+}
+
+// StringAt returns integer at location
+func (a *Array) StringAt(i int) (string, error) {
+	val := C.array_str_at(a.ptr, C.longlong(i))
+	if val == nil {
+		return "", fmt.Errorf("can't get string at %d", i)
+	}
+
+	s := C.GoString(val)
+	C.free(unsafe.Pointer(val))
+	return s, nil
+}
+
+// TimeAt returns time at location
+func (a *Array) TimeAt(i int) (time.Time, error) {
+	epochNano := int64(C.array_timestamp_at(a.ptr, C.longlong(i)))
+	t := time.Unix(epochNano/1e9, epochNano%1e9)
+	return t, nil
 }
 
 // Column is an arrow colum

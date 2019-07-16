@@ -4,8 +4,8 @@
 #include <plasma/client.h>
 
 #include <iostream>
-#include <vector>
 #include <sstream>
+#include <vector>
 
 #include "carrow.h"
 
@@ -19,40 +19,32 @@ const int INTEGER64_DTYPE = arrow::Type::INT64;
 const int STRING_DTYPE = arrow::Type::STRING;
 const int TIMESTAMP_DTYPE = arrow::Type::TIMESTAMP;
 
-/* TODO: Remove these */
-void warn(arrow::Status status) {
-  if (status.ok()) {
-    return;
-  }
-  std::cout << "CARROW:WARNING: " << status.message() << "\n";
-}
-
-void debug_mark(std::string msg = "HERE") {
+static void debug_mark(std::string msg = "HERE") {
   std::cout << "\033[1;31m";
-  std::cout << "<< " <<  msg << " >>\n";
+  std::cout << "<< " << msg << " >>\n";
   std::cout << "\033[0m";
   std::cout.flush();
 }
 
-#define CARROW_RETURN_IF_ERROR(status) \
-  do { \
-    if (!status.ok()) { \
-      return result_t{status.message().c_str(), nullptr}; \
-    } \
+#define CARROW_RETURN_IF_ERROR(status)                                         \
+  do {                                                                         \
+    if (!status.ok()) {                                                        \
+      return result_t{status.message().c_str(), nullptr};                      \
+    }                                                                          \
   } while (false)
 
 std::shared_ptr<arrow::DataType> data_type(int dtype) {
   switch (dtype) {
-    case BOOL_DTYPE:
-      return arrow::boolean();
-    case FLOAT64_DTYPE:
-      return arrow::float64();
-    case INTEGER64_DTYPE:
-      return arrow::int64();
-    case STRING_DTYPE:
-      return arrow::utf8();
-    case TIMESTAMP_DTYPE:
-      return arrow::timestamp(arrow::TimeUnit::NANO);
+  case BOOL_DTYPE:
+    return arrow::boolean();
+  case FLOAT64_DTYPE:
+    return arrow::float64();
+  case INTEGER64_DTYPE:
+    return arrow::int64();
+  case STRING_DTYPE:
+    return arrow::utf8();
+  case TIMESTAMP_DTYPE:
+    return arrow::timestamp(arrow::TimeUnit::NANO);
   }
 
   return nullptr;
@@ -152,7 +144,7 @@ result_t array_builder_append_float(void *vp, double value) {
   return result_t{nullptr, nullptr};
 }
 
-result_t array_builder_append_int(void *vp, long long value) {
+result_t array_builder_append_int(void *vp, int64_t value) {
   auto builder = (arrow::Int64Builder *)vp;
   auto status = builder->Append(value);
   CARROW_RETURN_IF_ERROR(status);
@@ -172,7 +164,6 @@ result_t array_builder_append_timestamp(void *vp, long long value) {
   CARROW_RETURN_IF_ERROR(status);
   return result_t{nullptr, nullptr};
 }
-
 
 // TODO: See comment in struct Table
 struct Array {
@@ -198,6 +189,77 @@ int64_t array_length(void *vp) {
 
   auto wrapper = (Array *)vp;
   return wrapper->array->length();
+}
+
+int array_bool_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return -1;
+  }
+
+  if (wrapper->array->type_id() != BOOL_DTYPE) {
+    return -1;
+  }
+
+  auto arr = (arrow::BooleanArray *)(wrapper->array.get());
+  return arr->Value(i) ? 1 : 0;
+}
+
+double array_float_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return -1;
+  }
+
+  if (wrapper->array->type_id() != FLOAT64_DTYPE) {
+    return -1;
+  }
+
+  auto arr = (arrow::DoubleArray *)(wrapper->array.get());
+  return arr->Value(i);
+}
+
+int64_t array_int_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return -1;
+  }
+
+  if (wrapper->array->type_id() != INTEGER64_DTYPE) {
+    return -1;
+  }
+
+  auto arr = (arrow::Int64Array *)(wrapper->array.get());
+  return arr->Value(i);
+}
+
+const char *array_str_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return nullptr;
+  }
+
+  if (wrapper->array->type_id() != STRING_DTYPE) {
+    return nullptr;
+  }
+
+  auto arr = (arrow::StringArray *)(wrapper->array.get());
+  auto str = arr->GetString(i);
+  return strdup(str.c_str());
+}
+
+int64_t array_timestamp_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return -1;
+  }
+
+  if (wrapper->array->type_id() != TIMESTAMP_DTYPE) {
+    return -1;
+  }
+
+  auto arr = (arrow::TimestampArray *)(wrapper->array.get());
+  return arr->Value(i);
 }
 
 void array_free(void *vp) {
@@ -295,7 +357,7 @@ void table_free(void *vp) {
 }
 
 result_t plasma_connect(char *path) {
-  plasma::PlasmaClient* client = new plasma::PlasmaClient();
+  plasma::PlasmaClient *client = new plasma::PlasmaClient();
   auto status = client->Connect(path, "", 0);
   if (!status.ok()) {
     client->Disconnect();
@@ -306,7 +368,9 @@ result_t plasma_connect(char *path) {
   return result_t{nullptr, client};
 }
 
-arrow::Status write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<arrow::ipc::RecordBatchWriter> writer) {
+arrow::Status
+write_table(std::shared_ptr<arrow::Table> table,
+            std::shared_ptr<arrow::ipc::RecordBatchWriter> writer) {
   arrow::TableBatchReader rdr(*table);
 
   while (true) {
@@ -329,14 +393,14 @@ arrow::Status write_table(std::shared_ptr<arrow::Table> table, std::shared_ptr<a
   return arrow::Status::OK();
 }
 
-
 result_t table_size(std::shared_ptr<arrow::Table> table) {
   arrow::TableBatchReader rdr(*table);
   std::shared_ptr<arrow::RecordBatch> batch;
   arrow::io::MockOutputStream stream;
 
   std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
-  auto status = arrow::ipc::RecordBatchStreamWriter::Open(&stream, table->schema(), &writer);
+  auto status = arrow::ipc::RecordBatchStreamWriter::Open(
+      &stream, table->schema(), &writer);
   CARROW_RETURN_IF_ERROR(status);
   status = write_table(table, writer);
   CARROW_RETURN_IF_ERROR(status);
@@ -344,7 +408,7 @@ result_t table_size(std::shared_ptr<arrow::Table> table) {
   CARROW_RETURN_IF_ERROR(status);
 
   auto num_written = stream.GetExtentBytesWritten();
-  return result_t{nullptr, (void*)num_written};
+  return result_t{nullptr, (void *)num_written};
 }
 
 result_t plasma_write(void *cp, void *tp, char *oid) {
@@ -371,7 +435,8 @@ result_t plasma_write(void *cp, void *tp, char *oid) {
 
   arrow::io::FixedSizeBufferWriter bw(buf);
   std::shared_ptr<arrow::ipc::RecordBatchWriter> writer;
-  status = arrow::ipc::RecordBatchStreamWriter::Open(&bw, table->schema(), &writer);
+  status =
+      arrow::ipc::RecordBatchStreamWriter::Open(&bw, table->schema(), &writer);
   CARROW_RETURN_IF_ERROR(status);
 
   status = write_table(table, writer);
@@ -387,7 +452,7 @@ result_t plasma_disconnect(void *vp) {
     return result_t{nullptr, nullptr};
   }
 
-  auto client = (plasma::PlasmaClient*)(vp);
+  auto client = (plasma::PlasmaClient *)(vp);
   auto status = client->Disconnect();
   CARROW_RETURN_IF_ERROR(status);
   delete client;
@@ -423,8 +488,7 @@ result_t plasma_read(void *cp, char *oid, int64_t timeout_ms) {
   CARROW_RETURN_IF_ERROR(status);
 
   std::vector<std::shared_ptr<arrow::RecordBatch>> batches;
-  while (true)
-  {
+  while (true) {
     std::shared_ptr<arrow::RecordBatch> batch;
     status = reader->ReadNext(&batch);
     CARROW_RETURN_IF_ERROR(status);
