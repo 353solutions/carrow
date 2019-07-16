@@ -16,7 +16,7 @@ gen:
 	go generate
 
 %.o: %.cc
-	g++ -Wall -g $(CXXOPT) -lpthread -std=c++11 $(ARROW_INC) -o $@ -c $^
+	g++ -Wall -g $(CXXOPT) -std=c++11 $(ARROW_INC) -o $@ -c $^
 
 clean:
 	rm -f *.o *.a *generate*.go
@@ -50,7 +50,6 @@ plasma-client:
 			-g \
 			$(shell pkg-config --cflags --libs plasma) \
 			$(shell pkg-config --cflags --libs arrow) \
-			-I$(ARROW_SRC_DIR) \
 			--std=c++11 \
 			-o plasmac
 

@@ -4,9 +4,11 @@
 #include <plasma/client.h>
 
 #include <iostream>
+#include <memory>
 #include <sstream>
-#include <string.h>
 #include <vector>
+
+#include <string.h>
 
 #include "carrow.h"
 
@@ -40,6 +42,13 @@ result_t result_new(const char *error) {
   r.ptr = nullptr;
   r.str = nullptr;
   return r;
+}
+
+static void debug_mark(std::string msg = "HERE") {
+  std::cout << "\033[1;31m";
+  std::cout << "<< " << msg << " >>\n";
+  std::cout << "\033[0m";
+  std::cout.flush();
 }
 
 std::shared_ptr<arrow::DataType> data_type(int dtype) {
@@ -153,7 +162,7 @@ result_t array_builder_append_float(void *vp, double value) {
   return result_new(nullptr);
 }
 
-result_t array_builder_append_int(void *vp, long long value) {
+result_t array_builder_append_int(void *vp, int64_t value) {
   auto builder = (arrow::Int64Builder *)vp;
   auto status = builder->Append(value);
   CARROW_RETURN_IF_ERROR(status);
@@ -200,6 +209,77 @@ int64_t array_length(void *vp) {
 
   auto wrapper = (Array *)vp;
   return wrapper->array->length();
+}
+
+int array_bool_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return -1;
+  }
+
+  if (wrapper->array->type_id() != BOOL_DTYPE) {
+    return -1;
+  }
+
+  auto arr = (arrow::BooleanArray *)(wrapper->array.get());
+  return arr->Value(i) ? 1 : 0;
+}
+
+double array_float_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return -1;
+  }
+
+  if (wrapper->array->type_id() != FLOAT64_DTYPE) {
+    return -1;
+  }
+
+  auto arr = (arrow::DoubleArray *)(wrapper->array.get());
+  return arr->Value(i);
+}
+
+int64_t array_int_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return -1;
+  }
+
+  if (wrapper->array->type_id() != INTEGER64_DTYPE) {
+    return -1;
+  }
+
+  auto arr = (arrow::Int64Array *)(wrapper->array.get());
+  return arr->Value(i);
+}
+
+const char *array_str_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return nullptr;
+  }
+
+  if (wrapper->array->type_id() != STRING_DTYPE) {
+    return nullptr;
+  }
+
+  auto arr = (arrow::StringArray *)(wrapper->array.get());
+  auto str = arr->GetString(i);
+  return strdup(str.c_str());
+}
+
+int64_t array_timestamp_at(void *vp, long long i) {
+  auto wrapper = (Array *)vp;
+  if (wrapper == nullptr) {
+    return -1;
+  }
+
+  if (wrapper->array->type_id() != TIMESTAMP_DTYPE) {
+    return -1;
+  }
+
+  auto arr = (arrow::TimestampArray *)(wrapper->array.get());
+  return arr->Value(i);
 }
 
 void array_free(void *vp) {

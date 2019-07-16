@@ -1,8 +1,9 @@
 *.a
 *.o
+.clang_complete
 .idea
 .vscode
 carrow
+carrow_generated.go
 plasmac
 wtr
-carrow_generated.go
