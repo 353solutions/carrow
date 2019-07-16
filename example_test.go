@@ -9,7 +9,7 @@ import (
 
 func Example() {
 	size := 100
-	intBld := carrow.NewInt64ArrayBuilder()
+	intBld := carrow.NewInteger64ArrayBuilder()
 	floatBld := carrow.NewFloat64ArrayBuilder()
 	for i := 0; i < size; i++ {
 		if err := intBld.Append(int64(i)); err != nil {

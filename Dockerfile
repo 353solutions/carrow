@@ -32,4 +32,5 @@ RUN conda install -c conda-forge -y \
 ENV LD_LIBRARY_PATH=/miniconda/lib
 ENV PKG_CONFIG_PATH=/miniconda/lib/pkgconfig
 
+ENV LD_LIBRARY_PATH=/miniconda/lib
 WORKDIR /src/carrow

@@ -18,34 +18,8 @@ import (
 */
 import "C"
 
-// DType is a data type
-type DType C.int
-
-// Supported data types
-var (
-	BoolType      = DType(C.BOOL_DTYPE)
-	Float64Type   = DType(C.FLOAT64_DTYPE)
-	Integer64Type = DType(C.INTEGER64_DTYPE)
-	StringType    = DType(C.STRING_DTYPE)
-	TimestampType = DType(C.TIMESTAMP_DTYPE)
-)
-
-func (dt DType) String() string {
-	switch dt {
-	case BoolType:
-		return "bool"
-	case Float64Type:
-		return "float64"
-	case Integer64Type:
-		return "int64"
-	case StringType:
-		return "string"
-	case TimestampType:
-		return "timestamp"
-	}
-
-	return "<unknown>"
-}
+//go:generate go run gen.go
+//go:generate go fmt carrow_generated.go
 
 // Field is a field description
 type Field struct {
@@ -134,21 +108,6 @@ type builder struct {
 	ptr unsafe.Pointer
 }
 
-// BoolArrayBuilder used for building bool Arrays
-type BoolArrayBuilder struct {
-	builder
-}
-
-// NewBoolArrayBuilder returns a new BoolArrayBuilder
-func NewBoolArrayBuilder() *BoolArrayBuilder {
-	r := result.New(C.array_builder_new(C.int(BoolType)))
-	// TODO: Do we want to change the New function to return *type, error?
-	if r.Err() != nil {
-		return nil
-	}
-	return &BoolArrayBuilder{builder{r.Ptr()}}
-}
-
 // Finish returns array from builder
 // You can't use the builder after calling Finish
 func (b *builder) Finish() (*Array, error) {
@@ -170,58 +129,19 @@ func (b *BoolArrayBuilder) Append(val bool) error {
 	return r.Err()
 }
 
-// Float64ArrayBuilder used for building float Arrays
-type Float64ArrayBuilder struct {
-	builder
-}
-
-// NewFloat64ArrayBuilder returns a new Float64ArrayBuilder
-func NewFloat64ArrayBuilder() *Float64ArrayBuilder {
-	r := result.New(C.array_builder_new(C.int(Float64Type)))
-	if r.Err() != nil {
-		return nil
-	}
-	return &Float64ArrayBuilder{builder{r.Ptr()}}
-}
-
 // Append appends an integer
 func (b *Float64ArrayBuilder) Append(val float64) error {
 	r := result.New(C.array_builder_append_float(b.ptr, C.double(val)))
 	return r.Err()
 }
 
-// Int64ArrayBuilder used for building integer Arrays
-type Int64ArrayBuilder struct {
-	builder
-}
-
-// NewInt64ArrayBuilder returns a new Int64ArrayBuilder
-func NewInt64ArrayBuilder() *Int64ArrayBuilder {
-	r := result.New(C.array_builder_new(C.int(Integer64Type)))
-	if r.Err() != nil {
-		return nil
-	}
-	return &Int64ArrayBuilder{builder{r.Ptr()}}
-}
-
 // Append appends an integer
-func (b *Int64ArrayBuilder) Append(val int64) error {
-	r := result.New(C.array_builder_append_int(b.ptr, C.longlong(val)))
-	return r.Err()
-}
-
-// StringArrayBuilder used for building string Arrays
-type StringArrayBuilder struct {
-	builder
-}
-
-// NewStringArrayBuilder returns a new StringArrayBuilder
-func NewStringArrayBuilder() *StringArrayBuilder {
-	r := result.New(C.array_builder_new(C.int(StringType)))
-	if r.Err() != nil {
-		return nil
+func (b *Integer64ArrayBuilder) Append(val int64) error {
+	r := C.array_builder_append_int(b.ptr, C.longlong(val))
+	if r.err != nil {
+		return errFromResult(r)
 	}
-	return &StringArrayBuilder{builder{r.Ptr()}}
+	return nil
 }
 
 // Append appends a string
@@ -231,20 +151,6 @@ func (b *StringArrayBuilder) Append(val string) error {
 	length := C.ulong(len(val)) // len is in bytes
 	r := result.New(C.array_builder_append_string(b.ptr, cStr, length))
 	return r.Err()
-}
-
-// TimestampArrayBuilder used for building bool Arrays
-type TimestampArrayBuilder struct {
-	builder
-}
-
-// NewTimestampArrayBuilder returns a new TimestampArrayBuilder
-func NewTimestampArrayBuilder() *TimestampArrayBuilder {
-	r := result.New(C.array_builder_new(C.int(TimestampType)))
-	if r.Err() != nil {
-		return nil
-	}
-	return &TimestampArrayBuilder{builder{r.Ptr()}}
 }
 
 // Append appends a timestamp
