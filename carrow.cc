@@ -19,12 +19,14 @@ const int INTEGER64_DTYPE = arrow::Type::INT64;
 const int STRING_DTYPE = arrow::Type::STRING;
 const int TIMESTAMP_DTYPE = arrow::Type::TIMESTAMP;
 
+/*
 static void debug_mark(std::string msg = "HERE") {
   std::cout << "\033[1;31m";
   std::cout << "<< " << msg << " >>\n";
   std::cout << "\033[0m";
   std::cout.flush();
 }
+*/
 
 #define CARROW_RETURN_IF_ERROR(status)                                         \
   do {                                                                         \
@@ -49,6 +51,31 @@ std::shared_ptr<arrow::DataType> data_type(int dtype) {
 
   return nullptr;
 }
+
+/* TODO: Do it with template (currently not possible under extern "C")
+so we can unite with Array
+
+e.g.
+template <class T>
+struct Shared<T> {
+  std::shared_ptr<T> ptr;
+};
+*/
+struct Metadata {
+  std::shared_ptr<arrow::KeyValueMetadata> ptr;
+};
+
+struct Schema {
+  std::shared_ptr<arrow::Schema> ptr;
+};
+
+struct Array {
+  std::shared_ptr<arrow::Array> array;
+};
+
+struct Table {
+  std::shared_ptr<arrow::Table> table;
+};
 
 void *field_new(char *name, int dtype) {
   auto dt = data_type(dtype);
@@ -90,15 +117,48 @@ void fields_free(void *vp) {
 
 void *schema_new(void *vp) {
   auto fields = (std::vector<std::shared_ptr<arrow::Field>> *)vp;
-  auto schema = new arrow::Schema(*fields);
-  return (void *)schema;
+  auto schema = new Schema;
+  schema->ptr = std::make_shared<arrow::Schema>(*fields);
+  return schema;
+}
+
+result_t schema_set_meta(void *vp, void *mp) {
+  result_t res = {nullptr, nullptr};
+  auto schema = (Schema *)vp;
+  if (schema == nullptr) {
+    res.err = strdup("null schema");
+    return res;
+  }
+
+  auto meta = (Metadata *)mp;
+  if (meta == nullptr) {
+    res.err = strdup("null meta");
+    return res;
+  }
+
+  schema->ptr = schema->ptr->AddMetadata(meta->ptr);
+  return res;
+}
+
+result_t schema_meta(void *vp) {
+  result_t res = {nullptr, nullptr};
+  auto schema = (Schema *)vp;
+  if (schema == nullptr) {
+    res.err = strdup("null schema");
+    return res;
+  }
+
+  auto meta = new Metadata;
+  meta->ptr = schema->ptr->metadata()->Copy();
+  res.ptr = meta;
+  return res;
 }
 
 void schema_free(void *vp) {
   if (vp == nullptr) {
     return;
   }
-  auto schema = (arrow::Schema *)vp;
+  auto schema = (Schema *)vp;
   delete schema;
 }
 
@@ -164,11 +224,6 @@ result_t array_builder_append_timestamp(void *vp, long long value) {
   CARROW_RETURN_IF_ERROR(status);
   return result_t{nullptr, nullptr};
 }
-
-// TODO: See comment in struct Table
-struct Array {
-  std::shared_ptr<arrow::Array> array;
-};
 
 result_t array_builder_finish(void *vp) {
   auto builder = (arrow::ArrayBuilder *)vp;
@@ -310,25 +365,11 @@ void columns_free(void *vp) {
   delete columns;
 }
 
-/* TODO: Do it with template (currently not possible under extern "C")
-so we can unite with Array
-
-e.g.
-template <class T>
-struct Shared<T> {
-  std::shared_ptr<T> ptr;
-};
-*/
-
-struct Table {
-  std::shared_ptr<arrow::Table> table;
-};
-
 void *table_new(void *sp, void *cp) {
-  std::shared_ptr<arrow::Schema> schema((arrow::Schema *)sp);
+  auto schema = (Schema *)sp;
   auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)cp;
 
-  auto table = arrow::Table::Make(schema, *columns);
+  auto table = arrow::Table::Make(schema->ptr, *columns);
   if (table == nullptr) {
     return nullptr;
   }
@@ -354,6 +395,60 @@ void table_free(void *vp) {
   }
 
   delete (Table *)vp;
+}
+
+void *meta_new() {
+  auto meta = new Metadata;
+  meta->ptr = std::make_shared<arrow::KeyValueMetadata>();
+
+  return meta;
+}
+
+result_t meta_set(void *vp, const char *key, const char *value) {
+  result_t res = {nullptr, nullptr};
+  auto meta = (Metadata *)vp;
+  if (meta == nullptr) {
+    res.err = strdup("null pointer");
+    return res;
+  }
+
+  meta->ptr->Append(key, value);
+  return res;
+}
+
+result_t meta_size(void *vp) {
+  result_t res = {nullptr, nullptr};
+  auto meta = (Metadata *)vp;
+  if (meta == nullptr) {
+    res.err = strdup("null pointer");
+    return res;
+  }
+  res.i = meta->ptr->size();
+  return res;
+}
+
+result_t meta_key(void *vp, int64_t i) {
+  result_t res = {nullptr, nullptr};
+  auto meta = (Metadata *)vp;
+  if (meta == nullptr) {
+    res.err = strdup("null pointer");
+    return res;
+  }
+
+  res.ptr = strdup(meta->ptr->key(i).c_str());
+  return res;
+}
+
+result_t meta_value(void *vp, int64_t i) {
+  result_t res = {nullptr, nullptr};
+  auto meta = (Metadata *)vp;
+  if (meta == nullptr) {
+    res.err = strdup("null pointer");
+    return res;
+  }
+
+  res.ptr = strdup(meta->ptr->value(i).c_str());
+  return res;
 }
 
 result_t plasma_connect(char *path) {

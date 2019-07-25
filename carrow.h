@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdint.h>
 
 extern const int BOOL_DTYPE;
@@ -16,6 +17,7 @@ extern const int TIMESTAMP_DTYPE;
 typedef struct {
   const char *err;
   void *ptr;
+  int64_t i;
 } result_t;
 
 void *field_new(char *name, int type);
@@ -28,6 +30,8 @@ void fields_append(void *vp, void *fp);
 void fields_free(void *vp);
 
 void *schema_new(void *vp);
+result_t schema_meta(void *vp);
+result_t schema_set_meta(void *vp, void *meta);
 void schema_free(void *vp);
 
 result_t array_builder_new(int dtype);
@@ -60,6 +64,12 @@ void *table_new(void *sp, void *cp);
 long long table_num_cols(void *vp);
 long long table_num_rows(void *vp);
 void table_free(void *vp);
+
+void *meta_new();
+result_t meta_set(void *vp, const char *key, const char *value);
+result_t meta_size(void *vp);
+result_t meta_key(void *vp, int64_t i);
+result_t meta_value(void *vp, int64_t i);
 
 result_t plasma_connect(char *path);
 result_t plasma_write(void *cp, void *tp, char *oid);
