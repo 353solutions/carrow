@@ -1,4 +1,4 @@
-package result
+package carrow
 
 import (
 	"errors"
@@ -7,8 +7,8 @@ import (
 
 /*
 #cgo pkg-config: arrow plasma
-#cgo CFLAGS: -I../..
-#cgo LDFLAGS: -lcarrow -L../..
+#cgo CFLAGS: -I.
+#cgo LDFLAGS: -lcarrow -L.
 
 #include <stdlib.h>
 #include "carrow.h"
@@ -22,14 +22,13 @@ type Result struct {
 }
 
 // New return new Result
-func New(r C.result_t) Result {
+func New(r C.result_t) (p Result) {
 	var err error
 	if r.err != nil {
 		err = errors.New(C.GoString(r.err))
-		C.free(r.err)
+		print(err)
 	}
-
-	return &Result{r, err}
+	return p
 }
 
 // Err returns the error
@@ -58,5 +57,5 @@ func (r Result) Int() int64 {
 
 // Float returns float value
 func (r Result) Float() float64 {
-	return float64(c.result_float(r.r))
+	return float64(0)
 }

@@ -79,11 +79,11 @@ var(
 
 	// New{{$val}}ArrayBuilder returns a new {{$val}}ArrayBuilder
 	func New{{$val}}ArrayBuilder() *{{$val}}ArrayBuilder {
-		r := C.array_builder_new(C.int({{$val}}Type))
+		r := C.array_builder_new(C.int(0))
 		if r.err != nil {
 			return nil
 		}
-		return &{{$val}}ArrayBuilder{builder{r.ptr}}
+		return nil
 	}
 {{- end}}
 

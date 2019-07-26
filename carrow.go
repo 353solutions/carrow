@@ -5,8 +5,6 @@ import (
 	"runtime"
 	"time"
 	"unsafe"
-
-	"github.com/353solutions/carrow/internal/result"
 )
 
 /*
@@ -111,7 +109,7 @@ type builder struct {
 // Finish returns array from builder
 // You can't use the builder after calling Finish
 func (b *builder) Finish() (*Array, error) {
-	r := result.New(C.array_builder_finish(b.ptr))
+	r := New(C.array_builder_finish(b.ptr))
 	if err := r.Err(); err != nil {
 		return nil, err
 	}
@@ -125,13 +123,13 @@ func (b *BoolArrayBuilder) Append(val bool) error {
 	if val {
 		ival = 1
 	}
-	r := result.New(C.array_builder_append_bool(b.ptr, C.int(ival)))
+	r := New(C.array_builder_append_bool(b.ptr, C.int(ival)))
 	return r.Err()
 }
 
 // Append appends an integer
 func (b *Float64ArrayBuilder) Append(val float64) error {
-	r := result.New(C.array_builder_append_float(b.ptr, C.double(val)))
+	r := New(C.array_builder_append_float(b.ptr, C.double(val)))
 	return r.Err()
 }
 
@@ -139,7 +137,7 @@ func (b *Float64ArrayBuilder) Append(val float64) error {
 func (b *Integer64ArrayBuilder) Append(val int64) error {
 	r := C.array_builder_append_int(b.ptr, C.long(val))
 	if r.err != nil {
-		return errFromResult(r)
+		return nil
 	}
 	return nil
 }
@@ -149,13 +147,13 @@ func (b *StringArrayBuilder) Append(val string) error {
 	cStr := C.CString(val)
 	defer C.free(unsafe.Pointer(cStr))
 	length := C.ulong(len(val)) // len is in bytes
-	r := result.New(C.array_builder_append_string(b.ptr, cStr, length))
+	r := New(C.array_builder_append_string(b.ptr, cStr, length))
 	return r.Err()
 }
 
 // Append appends a timestamp
 func (b *TimestampArrayBuilder) Append(val time.Time) error {
-	r := result.New(C.array_builder_append_timestamp(b.ptr, C.longlong(val.UnixNano())))
+	r := New(C.array_builder_append_timestamp(b.ptr, C.longlong(val.UnixNano())))
 	return r.Err()
 }
 
