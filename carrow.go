@@ -38,9 +38,6 @@ func NewField(name string, dtype DType) (*Field, error) {
 
 	field := &Field{ptr}
 
-	runtime.SetFinalizer(field, func(f *Field) {
-		C.field_free(f.ptr)
-	})
 	return field, nil
 }
 
@@ -60,9 +57,6 @@ func NewFieldList() (*FieldList, error) {
 
 	fieldList := &FieldList{ptr}
 
-	runtime.SetFinalizer(fieldList, func(f *FieldList) {
-		C.field_free(f.ptr)
-	})
 	return fieldList, nil
 }
 
@@ -104,11 +98,34 @@ func NewSchema(fields []*Field) (*Schema, error) {
 	return schema, nil
 }
 
+// Metadata returns the schema metadata
+func (s *Schema) Metadata() (*Metadata, error) {
+	r := C.schema_meta(s.ptr)
+	if err := errFromResult(r); err != nil {
+		return nil, err
+	}
+
+	return &Metadata{r.ptr}, nil
+}
+
+// SetMetadata sets the metadata
+func (s *Schema) SetMetadata(m *Metadata) error {
+	r := C.schema_set_meta(s.ptr, m.ptr)
+	if err := errFromResult(r); err != nil {
+		return err
+	}
+	s.ptr = r.ptr
+	return nil
+}
+
 type builder struct {
 	ptr unsafe.Pointer
 }
 
 func errFromResult(r C.result_t) error {
+	if r.err == nil {
+		return nil
+	}
 	err := fmt.Errorf(C.GoString(r.err))
 	C.free(unsafe.Pointer(r.err))
 	return err
@@ -118,8 +135,8 @@ func errFromResult(r C.result_t) error {
 // You can't use the builder after calling Finish
 func (b *builder) Finish() (*Array, error) {
 	r := C.array_builder_finish(b.ptr)
-	if r.err != nil {
-		return nil, errFromResult(r)
+	if err := errFromResult(r); err != nil {
+		return nil, err
 	}
 
 	return &Array{r.ptr}, nil
@@ -132,28 +149,19 @@ func (b *BoolArrayBuilder) Append(val bool) error {
 		ival = 1
 	}
 	r := C.array_builder_append_bool(b.ptr, C.int(ival))
-	if r.err != nil {
-		return errFromResult(r)
-	}
-	return nil
+	return errFromResult(r)
 }
 
 // Append appends an integer
 func (b *Float64ArrayBuilder) Append(val float64) error {
 	r := C.array_builder_append_float(b.ptr, C.double(val))
-	if r.err != nil {
-		return errFromResult(r)
-	}
-	return nil
+	return errFromResult(r)
 }
 
 // Append appends an integer
 func (b *Integer64ArrayBuilder) Append(val int64) error {
 	r := C.array_builder_append_int(b.ptr, C.long(val))
-	if r.err != nil {
-		return errFromResult(r)
-	}
-	return nil
+	return errFromResult(r)
 }
 
 // Append appends a string
@@ -162,20 +170,13 @@ func (b *StringArrayBuilder) Append(val string) error {
 	defer C.free(unsafe.Pointer(cStr))
 	length := C.ulong(len(val)) // len is in bytes
 	r := C.array_builder_append_string(b.ptr, cStr, length)
-	if r.err != nil {
-		return errFromResult(r)
-	}
-
-	return nil
+	return errFromResult(r)
 }
 
 // Append appends a timestamp
 func (b *TimestampArrayBuilder) Append(val time.Time) error {
 	r := C.array_builder_append_timestamp(b.ptr, C.longlong(val.UnixNano()))
-	if r.err != nil {
-		return errFromResult(r)
-	}
-	return nil
+	return errFromResult(r)
 }
 
 // Array is arrow array
@@ -320,4 +321,58 @@ func (t *Table) NumCols() int {
 // Ptr returns the underlying C++ pointer
 func (t *Table) Ptr() unsafe.Pointer {
 	return t.ptr
+}
+
+// Metadata in schema
+type Metadata struct {
+	ptr unsafe.Pointer
+}
+
+// NewMetadata creates new Metadata
+func NewMetadata() *Metadata {
+	return &Metadata{C.meta_new()}
+}
+
+// Set sets a key/value
+func (m *Metadata) Set(key, value string) error {
+	cKey, cVal := C.CString(key), C.CString(value)
+	defer C.free(unsafe.Pointer(cKey))
+	defer C.free(unsafe.Pointer(cVal))
+
+	r := C.meta_set(m.ptr, cKey, cVal)
+	return errFromResult(r)
+}
+
+// Len returns number of elements
+func (m *Metadata) Len() (int, error) {
+	r := C.meta_size(m.ptr)
+	if err := errFromResult(r); err != nil {
+		return 0, err
+	}
+
+	return int(r.i), nil
+}
+
+// Key returns key at index i
+func (m *Metadata) Key(i int) (string, error) {
+	r := C.meta_key(m.ptr, C.long(i))
+	if err := errFromResult(r); err != nil {
+		return "", err
+	}
+
+	key := C.GoString((*C.char)(r.ptr))
+	C.free(r.ptr)
+	return key, nil
+}
+
+// Value returns value at index i
+func (m *Metadata) Value(i int) (string, error) {
+	r := C.meta_value(m.ptr, C.long(i))
+	if err := errFromResult(r); err != nil {
+		return "", err
+	}
+
+	key := C.GoString((*C.char)(r.ptr))
+	C.free(r.ptr)
+	return key, nil
 }
