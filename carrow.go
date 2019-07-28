@@ -38,11 +38,6 @@ func NewField(name string, dtype DType) (*Field, error) {
 
 	field := &Field{ptr}
 
-	/*
-		runtime.SetFinalizer(field, func(f *Field) {
-			C.field_free(f.ptr)
-		})
-	*/
 	return field, nil
 }
 
@@ -62,11 +57,6 @@ func NewFieldList() (*FieldList, error) {
 
 	fieldList := &FieldList{ptr}
 
-	/*
-		runtime.SetFinalizer(fieldList, func(f *FieldList) {
-			C.field_free(f.ptr)
-		})
-	*/
 	return fieldList, nil
 }
 
