@@ -9,8 +9,8 @@ package main
 import (
 	"log"
 	"os"
-	"text/template"
 	"strings"
+	"text/template"
 	"time"
 )
 
@@ -18,15 +18,19 @@ type data struct {
 	Type string
 }
 
+type arrow_type struct {
+	GoType string
+}
+
 func main() {
-	arrowTypes := []string{"Bool", "Float64", "Integer64", "String", "Timestamp"}
+	arrowTypes := []arrow_type{arrow_type{"Bool"}, arrow_type{"Float64"}, arrow_type{"Integer64"}, arrow_type{"String"}, arrow_type{"Timestamp"}}
 	f, err := os.Create("carrow_generated.go")
 	die(err)
 	defer f.Close()
 
 	packageTemplate.Execute(f, struct {
 		Timestamp  time.Time
-		ArrowTypes []string
+		ArrowTypes []arrow_type
 	}{
 		Timestamp:  time.Now(),
 		ArrowTypes: arrowTypes,
@@ -66,32 +70,32 @@ type DType C.int
 // Supported data types
 var(
 {{- range $val := .ArrowTypes}}
-	{{$val}}Type = DType(C.{{$val | ToUpper }}_DTYPE)
+	{{$val.GoType}}Type = DType(C.{{$val.GoType | ToUpper }}_DTYPE)
 {{- end}}
 )
 
 // Array Builders
 {{- range $val := .ArrowTypes}}
 
-	type {{$val}}ArrayBuilder struct {
+	type {{$val.GoType}}ArrayBuilder struct {
 		builder
 	}
 
-	// New{{$val}}ArrayBuilder returns a new {{$val}}ArrayBuilder
-	func New{{$val}}ArrayBuilder() *{{$val}}ArrayBuilder {
-		r := C.array_builder_new(C.int({{$val}}Type))
+	// New{{$val.GoType}}ArrayBuilder returns a new {{$val.GoType}}ArrayBuilder
+	func New{{$val.GoType}}ArrayBuilder() *{{$val.GoType}}ArrayBuilder {
+		r := C.array_builder_new(C.int({{$val.GoType}}Type))
 		if r.err != nil {
 			return nil
 		}
-		return &{{$val}}ArrayBuilder{builder{r.ptr}}
+		return &{{$val.GoType}}ArrayBuilder{builder{r.ptr}}
 	}
 {{- end}}
 
 func (dt DType) String() string {
 	switch dt {
 {{- range $val := .ArrowTypes}}
-	case {{$val}}Type:
-		return "{{$val}}"
+	case {{$val.GoType}}Type:
+		return "{{$val.GoType}}"
 {{- end}}
 	}
 
