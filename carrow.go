@@ -142,16 +142,6 @@ func (b *builder) Finish() (*Array, error) {
 	return &Array{r.ptr}, nil
 }
 
-// Append appends a bool
-func (b *BoolArrayBuilder) Append(val bool) error {
-	var ival int
-	if val {
-		ival = 1
-	}
-	r := C.array_builder_append_bool(b.ptr, C.int(ival))
-	return errFromResult(r)
-}
-
 // Append appends an integer
 func (b *Float64ArrayBuilder) Append(val float64) error {
 	r := C.array_builder_append_float(b.ptr, C.double(val))

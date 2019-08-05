@@ -20,10 +20,12 @@ type data struct {
 
 type arrow_type struct {
 	GoType string
+	AppenderGoType string
+	AppenderCFunctionName string
 }
 
 func main() {
-	arrowTypes := []arrow_type{arrow_type{"Bool"}, arrow_type{"Float64"}, arrow_type{"Integer64"}, arrow_type{"String"}, arrow_type{"Timestamp"}}
+	arrowTypes := []arrow_type{arrow_type{"Bool","bool","array_builder_append_bool"}, arrow_type{"Float64","bool","array_builder_append_bool"}, arrow_type{"Integer64","bool","array_builder_append_bool"}, arrow_type{"String","bool","array_builder_append_bool"}, arrow_type{"Timestamp","bool","array_builder_append_bool"}}
 	f, err := os.Create("carrow_generated.go")
 	die(err)
 	defer f.Close()
@@ -100,6 +102,16 @@ func (dt DType) String() string {
 	}
 
 	return "<unknown>"
+}
+
+// Append appends a bool
+func (b *{{ (index .ArrowTypes 0).GoType }}ArrayBuilder) Append(val {{ (index .ArrowTypes 0).AppenderGoType }}) error {
+	var ival int
+	if val {
+		ival = 1
+	}
+	r := C.{{( index .ArrowTypes 0).AppenderCFunctionName}}(b.ptr, C.int(ival))
+	return errFromResult(r)
 }
 
 `))
