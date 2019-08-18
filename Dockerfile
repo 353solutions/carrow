@@ -28,7 +28,7 @@ RUN conda install -c conda-forge -y \
     ipython \
     numpy \
     pkg-config \
-    pyarrow=0.13.0
+    pyarrow=0.14.0
 
 ENV LD_LIBRARY_PATH=/miniconda/lib
 WORKDIR /src/carrow
