@@ -160,8 +160,32 @@ func (b *Float64ArrayBuilder) Append(val float64) error {
 
 // Append appends an integer
 func (b *Integer64ArrayBuilder) Append(val int64) error {
-	r := C.array_builder_append_int(b.ptr, C.long(val))
+	b.buffer[b.bufferIdx] = C.long(val)
+	b.bufferIdx++
+	if b.bufferIdx < bufferSize {
+		return nil
+	}
+
+	err := b.flush()
+	return err
+}
+
+func (b *Integer64ArrayBuilder) flush() error {
+	cSize := C.long(b.bufferIdx)
+	b.bufferIdx = 0
+	r := C.array_builder_append_ints(b.ptr, (*C.long)(&b.buffer[0]), cSize)
 	return errFromResult(r)
+}
+
+// Finish creates the array from the builder
+func (b *Integer64ArrayBuilder) Finish() (*Array, error) {
+	if b.bufferIdx > 0 {
+		if err := b.flush(); err != nil {
+			return nil, err
+		}
+	}
+
+	return b.builder.Finish()
 }
 
 // Append appends a string

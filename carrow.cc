@@ -211,6 +211,13 @@ result_t array_builder_append_int(void *vp, int64_t value) {
   return result_t{nullptr, nullptr};
 }
 
+result_t array_builder_append_ints(void *vp, int64_t *values, int64_t length) {
+  auto builder = (arrow::Int64Builder *)vp;
+  auto status = builder->AppendValues(values, length);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
+}
+
 result_t array_builder_append_string(void *vp, char *cp, size_t length) {
   auto builder = (arrow::StringBuilder *)vp;
   auto status = builder->Append(cp, length);

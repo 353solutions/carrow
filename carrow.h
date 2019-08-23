@@ -38,6 +38,7 @@ result_t array_builder_new(int dtype);
 result_t array_builder_append_bool(void *vp, int value);
 result_t array_builder_append_float(void *vp, double value);
 result_t array_builder_append_int(void *vp, int64_t value);
+result_t array_builder_append_ints(void *vp, int64_t *values, int64_t length);
 result_t array_builder_append_string(void *vp, char *value, size_t length);
 result_t array_builder_append_timestamp(void *vp, long long value);
 result_t array_builder_finish(void *vp);
