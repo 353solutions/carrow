@@ -158,6 +158,14 @@ func (b *Float64ArrayBuilder) Append(val float64) error {
 	return errFromResult(r)
 }
 
+/*
+// Append appends an integer
+func (b *Integer64ArrayBuilder) Append(val int64) error {
+	r := C.array_builder_append_int(b.ptr, C.long(val))
+	return errFromResult(r)
+}
+*/
+
 // Append appends an integer
 func (b *Integer64ArrayBuilder) Append(val int64) error {
 	b.buffer[b.bufferIdx] = C.long(val)

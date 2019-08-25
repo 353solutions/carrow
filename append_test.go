@@ -6,25 +6,39 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const arrSize = 10000
-
-func buildInt(require *require.Assertions) *Array {
+func TestAppendInt64(t *testing.T) {
+	require := require.New(t)
 	bld := NewInteger64ArrayBuilder()
-	require.NotNil(bld, "new")
-	for i := int64(0); i < arrSize; i++ {
+	require.NotNil(bld, "create builder")
+
+	const size = 20913
+	for i := int64(0); i < size; i++ {
 		err := bld.Append(i)
 		require.NoErrorf(err, "append %d", i)
 	}
 
 	arr, err := bld.Finish()
 	require.NoError(err, "finish")
-	return arr
+
+	arrLen := arr.Length()
+	require.Equal(arrLen, size, "length")
+
+	for i := 0; i < size; i++ {
+		val, err := arr.Int64At(i)
+		require.NoErrorf(err, "Int64At %d", i)
+		require.Equalf(int64(i), val, "value at %d", i)
+	}
+
 }
 
 func BenchmarkAppendInt64(b *testing.B) {
-	require := require.New(b)
+	b.StopTimer()
+	bld := NewInteger64ArrayBuilder()
+	if bld == nil {
+		b.Fatal("create builder")
+	}
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		arr := buildInt(require)
-		require.Equal(arrSize, arr.Length(), "length")
+		bld.Append(int64(i))
 	}
 }
