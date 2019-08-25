@@ -77,6 +77,7 @@ import "C"
 // DType is a data type
 type DType C.int
 
+// Linux default memory page size is 4k
 const bufferSize = 1024 * 4
 
 
