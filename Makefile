@@ -77,7 +77,10 @@ wtr:
 gdb-wtr: wtr
 	gdb wtr
 
-artifact: artifact-amd64
+artifact: all artifact-amd64
 
 artifact-amd64:
 	$(info building artifact-amd64)
+	mkdir -p bindings/amd64
+	cp libcarrow.a ./bindings/amd64/libcarrow_amd64.a
+
