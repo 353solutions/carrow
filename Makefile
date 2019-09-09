@@ -76,3 +76,8 @@ wtr:
 
 gdb-wtr: wtr
 	gdb wtr
+
+artifact: artifact-amd64
+
+artifact-amd64:
+	$(info building artifact-amd64)
