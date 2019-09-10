@@ -77,7 +77,7 @@ wtr:
 gdb-wtr: wtr
 	gdb wtr
 
-artifact: all artifact-amd64
+artifact: libcarrow.a gen artifact-amd64
 
 artifact-amd64:
 	$(info building artifact-amd64)
