@@ -9,7 +9,8 @@ import (
 
 /*
 #cgo pkg-config: arrow plasma
-#cgo LDFLAGS: -lcarrow -L.
+#cgo x86   LDFLAGS: -lcarrow -L.
+#cgo amd64 LDFLAGS: -lcarrow_amd64 -L./bindings/amd64
 #cgo CXXFLAGS: -I/src/arrow/cpp/src
 // FIXME: plasma headers
 
