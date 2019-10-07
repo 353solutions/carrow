@@ -50,8 +50,9 @@ package carrow
 
 /*
 #cgo pkg-config: arrow plasma
-#cgo x86   LDFLAGS: -lcarrow_x86 -L./bindings/x86
-#cgo amd64 LDFLAGS: -lcarrow_amd64 -L./bindings/amd64
+#cgo LDFLAGS: -lcarrow
+#cgo linux LDFLAGS: -L./bindings/linux-x86_64
+#cgo darwin LDFLAGS: -L./bindings/darwin-x86_64
 #cgo CXXFLAGS: -I/src/arrow/cpp/src
 // FIXME: plasma headers
 
