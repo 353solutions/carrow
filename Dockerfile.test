@@ -32,5 +32,7 @@ ENV LD_LIBRARY_PATH=/miniconda/lib
 
 WORKDIR /src/carrow
 COPY . .
+RUN make clean
+RUN make artifact
 RUN make
 RUN go test -v ./...

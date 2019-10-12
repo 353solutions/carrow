@@ -6,7 +6,7 @@ CXXOPT := -O2
 LD_LIBRARY_PATH ?= /miniconda/lib
 PKG_CONFIG_PATH ?= /miniconda/lib/pkgconfig
 
-all: libcarrow.a gen
+all: gen
 	go build ./...
 
 libcarrow.a: carrow.o
@@ -20,6 +20,7 @@ gen:
 
 clean:
 	rm -f *.o *.a *generate*.go
+	rm -rf bindings
 
 get-arrow:
 		git clone git://github.com/apache/arrow.git ../arrow
