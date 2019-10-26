@@ -2,8 +2,8 @@
 
 // +build ignore
 
-// This program generates contributors.go. It can be invoked by running
-// go generate
+// This program generates carrow_generated.go. It can be invoked by running go
+// generate
 package main
 
 import (
@@ -38,7 +38,7 @@ func die(err error) {
 func CType(name string) string {
 	switch name {
 	case "Bool":
-		return "C.int"
+		return "C.uint8_t"
 	case "Float64":
 		return "C.double"
 	case "Integer64":
@@ -46,7 +46,7 @@ func CType(name string) string {
 	case "String":
 		return "*C.char"
 	case "Timestamp":
-		return "C.longlong"
+		return "C.long"
 	}
 
 	panic(name)
@@ -104,7 +104,9 @@ var(
 		if r.err != nil {
 			return nil
 		}
-		return &{{$val}}ArrayBuilder{builder: builder{r.ptr}}
+		bld := &{{$val}}ArrayBuilder{}
+		bld.builder = builder{r.ptr, bld}
+		return bld
 	}
 {{- end}}
 

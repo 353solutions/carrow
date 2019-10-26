@@ -35,12 +35,18 @@ result_t schema_set_meta(void *vp, void *meta);
 void schema_free(void *vp);
 
 result_t array_builder_new(int dtype);
-result_t array_builder_append_bool(void *vp, int value);
+result_t array_builder_append_bool(void *vp, uint8_t value);
+result_t array_builder_append_bools(void *vp, uint8_t *values, int64_t length);
 result_t array_builder_append_float(void *vp, double value);
+result_t array_builder_append_floats(void *vp, double *values, int64_t length);
 result_t array_builder_append_int(void *vp, int64_t value);
 result_t array_builder_append_ints(void *vp, int64_t *values, int64_t length);
 result_t array_builder_append_string(void *vp, char *value, size_t length);
-result_t array_builder_append_timestamp(void *vp, long long value);
+result_t array_builder_append_strings(void *vp, char **values, int64_t length);
+result_t array_builder_append_timestamp(void *vp, long value);
+result_t array_builder_append_timestamps(void *vp, long *values,
+                                         int64_t length);
+
 result_t array_builder_finish(void *vp);
 
 int64_t array_length(void *vp);
