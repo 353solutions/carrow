@@ -4,6 +4,7 @@ FROM ubuntu:18.04
 RUN apt-get update && apt-get install -y \
     vim \
     wget \
+    git  \
     && rm -rf /var/lib/apt/lists/*
 
 # Go installation
