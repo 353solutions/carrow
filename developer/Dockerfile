@@ -24,3 +24,5 @@ RUN cd /tmp && \
 ENV PATH="/miniconda/bin:${PATH}"
 RUN conda install -y \
     conda-forge::arrow-cpp=0.14
+
+ENV PKG_CONFIG_PATH=/miniconda/pkgs/arrow-cpp-0.14.1-py37h5ac5442_4/lib/pkgconfig
