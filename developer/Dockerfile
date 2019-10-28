@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
     vim \
     wget \
     git  \
+    build-essential \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Go installation
