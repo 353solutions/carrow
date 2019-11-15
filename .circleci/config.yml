@@ -7,4 +7,4 @@ jobs:
       - run: make circleci
 notify:
   webhooks:
-    - url: https://353.zulipchat.com/api/v1/external/circleci?api_key=${ZULIP_KEY}&stream=carrow&topic=circleci
+    - url: https://353.zulipchat.com/api/v1/external/circleci?api_key=$ZULIP_KEY&stream=carrow&topic=circleci
