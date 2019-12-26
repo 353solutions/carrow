@@ -5,3 +5,6 @@ jobs:
     steps:
       - checkout
       - run: make circleci
+notify:
+  webhooks:
+    - url: https://353.zulipchat.com/api/v1/external/circleci?api_key=DnqIzcuzOZ0ujTmrcLdgfoSmEctALDgJ&stream=carrow&topic=circleci
