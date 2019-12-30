@@ -136,7 +136,7 @@ result_t schema_set_meta(void *vp, void *mp) {
     return res;
   }
 
-  schema->ptr = schema->ptr->AddMetadata(meta->ptr);
+  schema->ptr = schema->ptr->WithMetadata(meta->ptr);
   return res;
 }
 
@@ -325,51 +325,17 @@ void array_free(void *vp) {
   delete (Array *)vp;
 }
 
-void *column_new(void *fp, void *ap) {
-  std::shared_ptr<arrow::Field> field((arrow::Field *)fp);
-  auto wrapper = (Array *)ap;
 
-  return new arrow::Column(field, wrapper->array);
-}
-
-int column_dtype(void *vp) {
-  auto column = (arrow::Column *)vp;
-  return column->type()->id();
-}
-
-void column_free(void *vp) {
-  if (vp == nullptr) {
-    return;
-  }
-  auto column = (arrow::Column *)vp;
-  delete column;
-}
-
-void *column_field(void *vp) {
-  auto column = (arrow::Column *)vp;
-  return column->field().get();
-}
-
-void *columns_new() {
-  return new std::vector<std::shared_ptr<arrow::Column>>();
-}
-
-void columns_append(void *vp, void *cp) {
-  auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)vp;
-  std::shared_ptr<arrow::Column> column((arrow::Column *)cp);
-  columns->push_back(column);
-}
-
-void columns_free(void *vp) {
-  auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)vp;
-  delete columns;
-}
-
-void *table_new(void *sp, void *cp) {
+void *table_new(void *sp, void *ap, size_t ncols) {
   auto schema = (Schema *)sp;
-  auto columns = (std::vector<std::shared_ptr<arrow::Column>> *)cp;
+  auto arrays = (Array**)ap;
 
-  auto table = arrow::Table::Make(schema->ptr, *columns);
+  auto vec = std::vector<std::shared_ptr<arrow::Array>>();
+	for (size_t i = 0; i < ncols; i++) {
+		vec.push_back(arrays[i]->array);
+	}
+
+  auto table = arrow::Table::Make(schema->ptr, vec);
   if (table == nullptr) {
     return nullptr;
   }
@@ -479,7 +445,7 @@ write_table(std::shared_ptr<arrow::Table> table,
       break;
     }
 
-    status = writer->WriteRecordBatch(*batch, true);
+    status = writer->WriteRecordBatch(*batch);
     if (!status.ok()) {
       return status;
     }

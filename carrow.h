@@ -51,16 +51,7 @@ int64_t array_timestamp_at(void *vp, long long i);
 
 void array_free(void *vp);
 
-void *column_new(void *field, void *array);
-void *column_field(void *vp);
-int column_dtype(void *vp);
-void column_free(void *vp);
-
-void *columns_new();
-void columns_append(void *vp, void *cp);
-void columns_free(void *vp);
-
-void *table_new(void *sp, void *cp);
+void *table_new(void *sp, void *ap, size_t ncols);
 long long table_num_cols(void *vp);
 long long table_num_rows(void *vp);
 void table_free(void *vp);

@@ -236,61 +236,20 @@ func (a *Array) TimeAt(i int) (time.Time, error) {
 	return t, nil
 }
 
-// Column is an arrow colum
-type Column struct {
-	ptr unsafe.Pointer
-}
-
-// DType returns the Column data type
-func (c *Column) DType() DType {
-	return DType(C.column_dtype(c.ptr))
-}
-
-// NewColumn returns a new column
-func NewColumn(field *Field, arr *Array) (*Column, error) {
-	if field == nil || arr == nil {
-		return nil, fmt.Errorf("nil pointer")
-	}
-
-	ptr := C.column_new(field.ptr, arr.ptr)
-	c := &Column{ptr}
-	if c.DType() != field.DType() {
-		return nil, fmt.Errorf("column type doesn't match Field type")
-	}
-
-	return c, nil
-}
-
-// Field returns the column field
-func (c *Column) Field() *Field {
-	ptr := C.column_field(c.ptr)
-	return &Field{ptr}
-}
-
 // Table is arrow table
 type Table struct {
 	ptr unsafe.Pointer
 }
 
-// NewTableFromColumns creates new Table from slice of columns
-func NewTableFromColumns(columns []*Column) (*Table, error) {
-	fields := make([]*Field, len(columns))
-	cptr := C.columns_new()
-	defer func() {
-		// FIXME
-		// C.columns_free(cptr)
-	}()
-
-	for i, col := range columns {
-		fields[i] = col.Field()
-		C.columns_append(cptr, col.ptr)
+// NewTableFromArrays creates new Table from slice of arrays
+func NewTableFromArrays(schema *Schema, arrays []*Array) (*Table, error) {
+	arrs := make([]unsafe.Pointer, 0, len(arrays))
+	for _, arr := range arrays {
+		arrs = append(arrs, arr.ptr)
 	}
-
-	schema, err := NewSchema(fields)
-	if err != nil {
-		return nil, err
-	}
-	ptr := C.table_new(schema.ptr, cptr)
+	aptr := (unsafe.Pointer)(&arrs[0])
+	ncols := len(arrays)
+	ptr := C.table_new(schema.ptr, aptr, C.size_t(ncols))
 	table := &Table{ptr}
 
 	/* FIXME

@@ -46,20 +46,14 @@ func Example() {
 		return
 	}
 
-	intCol, err := carrow.NewColumn(intField, intArr)
+	schema, err := carrow.NewSchema([]*carrow.Field{intField, floatField})
 	if err != nil {
-		fmt.Printf("intCol error: %s", err)
+		fmt.Printf("can't create schema: %s", err)
 		return
 	}
+	arrs := []*carrow.Array{intArr, floatArr}
 
-	floatCol, err := carrow.NewColumn(floatField, floatArr)
-	if err != nil {
-		fmt.Printf("floatCol error: %s", err)
-		return
-	}
-
-	cols := []*carrow.Column{intCol, floatCol}
-	table, err := carrow.NewTableFromColumns(cols)
+	table, err := carrow.NewTableFromArrays(schema, arrs)
 	if err != nil {
 		fmt.Printf("table creation error: %s", err)
 		return
