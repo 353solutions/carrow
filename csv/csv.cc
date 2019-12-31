@@ -72,6 +72,7 @@ read_res_t csv_read(long long id) {
 	arrow::Status st;
 	arrow::MemoryPool* pool = arrow::default_memory_pool();
 	auto is = GoStream(id);
+	// FIXME: How to convert GoStream to std::shared_ptr<arrow::io::InputStream>
 	arrow::io::InputStream is = GoStream(id);
 	auto input = std::make_shared<arrow::io::InputStream>(&is);
 
@@ -95,8 +96,8 @@ read_res_t csv_read(long long id) {
 		return res;
 	}
 
-		auto tp = new Table;
-		tp->table = table;
-		res.table = tp;
-		return res;
+	auto tp = new Table;
+	tp->table = table;
+	res.table = tp;
+	return res;
 }
