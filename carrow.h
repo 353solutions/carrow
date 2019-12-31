@@ -25,11 +25,7 @@ const char *field_name(void *field);
 int field_dtype(void *vp);
 void field_free(void *vp);
 
-void *fields_new();
-void fields_append(void *vp, void *fp);
-void fields_free(void *vp);
-
-void *schema_new(void *vp);
+void *schema_new(void *vp, size_t count);
 result_t schema_meta(void *vp);
 result_t schema_set_meta(void *vp, void *meta);
 void schema_free(void *vp);

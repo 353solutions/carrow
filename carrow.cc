@@ -100,25 +100,14 @@ void field_free(void *vp) {
   delete field;
 }
 
-void *fields_new() { return new std::vector<std::shared_ptr<arrow::Field>>(); }
-
-void fields_append(void *vp, void *fp) {
-  auto fields = (std::vector<std::shared_ptr<arrow::Field>> *)vp;
-  std::shared_ptr<arrow::Field> field((arrow::Field *)fp);
-  fields->push_back(field);
-}
-
-void fields_free(void *vp) {
-  if (vp == nullptr) {
-    return;
-  }
-  delete (std::vector<std::shared_ptr<arrow::Field>> *)vp;
-}
-
-void *schema_new(void *vp) {
-  auto fields = (std::vector<std::shared_ptr<arrow::Field>> *)vp;
+void *schema_new(void *vp, size_t count) {
+	auto fields = (arrow::Field **)vp;
+	auto vec = std::vector<std::shared_ptr<arrow::Field>>();
+	for (size_t i = 0; i < count; i++) {
+		vec.push_back(std::shared_ptr<arrow::Field>(fields[i]));
+	}
   auto schema = new Schema;
-  schema->ptr = std::make_shared<arrow::Schema>(*fields);
+  schema->ptr = std::make_shared<arrow::Schema>(vec);
   return schema;
 }
 

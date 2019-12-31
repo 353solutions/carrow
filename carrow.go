@@ -42,25 +42,6 @@ func NewField(name string, dtype DType) (*Field, error) {
 	return field, nil
 }
 
-// FieldList is a warpper around std::shared_ptr<arrow::Field>
-type FieldList struct {
-	ptr unsafe.Pointer
-}
-
-// NewFieldList returns a new Field List
-func NewFieldList() (*FieldList, error) {
-
-	ptr := C.fields_new()
-
-	if ptr == nil {
-		return nil, fmt.Errorf("can't create fields list")
-	}
-
-	fieldList := &FieldList{ptr}
-
-	return fieldList, nil
-}
-
 // Name returns the field name
 func (f *Field) Name() string {
 	return C.GoString(C.field_name(f.ptr))
@@ -78,16 +59,13 @@ type Schema struct {
 
 // NewSchema creates a new schema
 func NewSchema(fields []*Field) (*Schema, error) {
-	fieldsList, err := NewFieldList()
-	if err != nil {
-		return nil, fmt.Errorf("can't create schema,failed creating fields list")
+	arr := make([]unsafe.Pointer, 0, len(fields))
+	for _, fld := range fields {
+		arr = append(arr, fld.ptr)
 	}
-	cf := fieldsList.ptr
-
-	for _, f := range fields {
-		C.fields_append(cf, f.ptr)
-	}
-	ptr := C.schema_new(cf)
+	cf := (unsafe.Pointer)(&arr[0])
+	count := len(fields)
+	ptr := C.schema_new(cf, C.size_t(count))
 	if ptr == nil {
 		return nil, fmt.Errorf("can't create schema")
 	}
