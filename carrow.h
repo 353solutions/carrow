@@ -25,11 +25,7 @@ const char *field_name(void *field);
 int field_dtype(void *vp);
 void field_free(void *vp);
 
-void *fields_new();
-void fields_append(void *vp, void *fp);
-void fields_free(void *vp);
-
-void *schema_new(void *vp);
+void *schema_new(void *vp, size_t count);
 result_t schema_meta(void *vp);
 result_t schema_set_meta(void *vp, void *meta);
 void schema_free(void *vp);
@@ -58,16 +54,7 @@ int64_t array_timestamp_at(void *vp, long long i);
 
 void array_free(void *vp);
 
-void *column_new(void *field, void *array);
-void *column_field(void *vp);
-int column_dtype(void *vp);
-void column_free(void *vp);
-
-void *columns_new();
-void columns_append(void *vp, void *cp);
-void columns_free(void *vp);
-
-void *table_new(void *sp, void *cp);
+void *table_new(void *sp, void *ap, size_t ncols);
 long long table_num_cols(void *vp);
 long long table_num_rows(void *vp);
 void table_free(void *vp);
