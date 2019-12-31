@@ -3,6 +3,9 @@ package csv
 import (
 	"fmt"
 	"io"
+	"unsafe"
+
+	"github.com/353solutions/carrow"
 )
 
 /*
@@ -104,4 +107,19 @@ func istream_closed(id int) C.csv_res_t {
 		res.size = 1
 	}
 	return res
+}
+
+// Reads a CSV data from rdr, returns a *carrow.Table
+func Read(rdr io.Reader) (*carrow.Table, error) {
+	is := &inStream{rdr: rdr}
+	id := reg.Alloc(is)
+	defer reg.Release(id)
+	res := C.csv_read(C.longlong(id))
+	if res.err != nil {
+		// TODO: Free res.err?
+		return nil, fmt.Errorf(C.GoString(res.err))
+	}
+
+	ptr := unsafe.Pointer(res.table)
+	return carrow.NewTableFromPtr(ptr), nil
 }

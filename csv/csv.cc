@@ -71,10 +71,7 @@ read_res_t csv_read(long long id) {
 	read_res_t res = {NULL, NULL};
 	arrow::Status st;
 	arrow::MemoryPool* pool = arrow::default_memory_pool();
-	auto is = GoStream(id);
-	// FIXME: How to convert GoStream to std::shared_ptr<arrow::io::InputStream>
-	arrow::io::InputStream is = GoStream(id);
-	auto input = std::make_shared<arrow::io::InputStream>(&is);
+	std::shared_ptr<arrow::io::InputStream> input = std::make_shared<GoStream>(id);
 
 	auto read_options = arrow::csv::ReadOptions::Defaults();
 	auto parse_options = arrow::csv::ParseOptions::Defaults();
