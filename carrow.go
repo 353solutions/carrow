@@ -243,6 +243,12 @@ type Array struct {
 	ptr unsafe.Pointer
 }
 
+// DType returns the array data type
+func (a *Array) DType() DType {
+	return DType(C.array_dtype(a.ptr))
+}
+
+
 // Length returns the length of the array
 func (a *Array) Length() int {
 	i := C.array_length(a.ptr)
@@ -334,6 +340,76 @@ func (t *Table) NumRows() int {
 // NumCols returns the number of columns
 func (t *Table) NumCols() int {
 	return int(C.table_num_cols(t.ptr))
+}
+
+// Schema returns the table Schema
+func (t *Table) Schema() *Schema {
+	ptr := C.table_schema(t.ptr)
+	if ptr == nil {
+		return nil
+	}
+
+	return &Schema{ptr}
+}
+
+// Column returns the nth column (Array)
+func (t *Table) Column(i int) (*Array, error) {
+	ptr := C.table_column(t.ptr, C.int(i))
+	if ptr == nil {
+		return nil, fmt.Errorf("can't find column %d", i)
+	}
+
+	return &Array{ptr}, nil
+}
+
+// ColumnByName returns column by name
+func (t *Table) ColumnByName(name string) (*Array, error) {
+	for i := 0; i < t.NumCols(); i++ {
+		fld, err := t.Field(i)
+		if err != nil {
+			return nil, err
+		}
+		if fld.Name() == name {
+			return t.Column(i)
+		}
+	}
+
+	return nil, fmt.Errorf("column %q not found", name)
+}
+
+// ColumnNames names returns names of columns
+func (t *Table) ColumnNames() ([]string, error) {
+	ncols := t.NumCols()
+	names := make([]string, 0, ncols)
+	for i := 0; i < ncols; i++ {
+		fld, err := t.Field(i)
+		if err != nil {
+			return nil, err
+		}
+		names = append(names, fld.Name())
+	}
+	return names, nil
+}
+
+// Slice returns a 0 copy slize of t
+// If length is -1 will return until end of table
+func (t *Table) Slice(offset int, length int) *Table {
+	if length == -1 {
+		length = t.NumRows()
+	}
+
+	ptr := C.table_slice(t.ptr, C.int64_t(offset), C.int64_t(length))
+	return &Table{ptr}
+}
+
+// Field returns the nth field
+func (t *Table) Field(i int) (*Field, error) {
+	ptr := C.table_field(t.ptr, C.int(i))
+	if ptr == nil {
+		return nil, fmt.Errorf("can't find field %d", i)
+	}
+
+	return &Field{ptr}, nil
 }
 
 // Ptr returns the underlying C++ pointer

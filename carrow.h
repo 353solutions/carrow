@@ -51,13 +51,18 @@ int64_t array_int_at(void *vp, long long i);
 double array_float_at(void *vp, long long i);
 const char *array_str_at(void *vp, long long i);
 int64_t array_timestamp_at(void *vp, long long i);
+int array_dtype(void *vp);
 
 void array_free(void *vp);
 
 void *table_new(void *sp, void *ap, size_t ncols);
+void table_free(void *vp);
 long long table_num_cols(void *vp);
 long long table_num_rows(void *vp);
-void table_free(void *vp);
+void *table_schema(void *vp);
+void *table_column(void *vp, int i);
+void *table_field(void *vp, int i);
+void *table_slice(void *vp, int64_t offset, int64_t length);
 
 void *meta_new();
 result_t meta_set(void *vp, const char *key, const char *value);
