@@ -70,11 +70,11 @@ struct Schema {
 };
 
 struct Array {
-  std::shared_ptr<arrow::Array> array;
+  std::shared_ptr<arrow::Array> ptr;
 };
 
 struct Table {
-  std::shared_ptr<arrow::Table> table;
+  std::shared_ptr<arrow::Table> ptr;
 };
 
 void *field_new(char *name, int dtype) {
@@ -101,11 +101,11 @@ void field_free(void *vp) {
 }
 
 void *schema_new(void *vp, size_t count) {
-	auto fields = (arrow::Field **)vp;
-	auto vec = std::vector<std::shared_ptr<arrow::Field>>();
-	for (size_t i = 0; i < count; i++) {
-		vec.push_back(std::shared_ptr<arrow::Field>(fields[i]));
-	}
+  auto fields = (arrow::Field **)vp;
+  auto vec = std::vector<std::shared_ptr<arrow::Field>>();
+  for (size_t i = 0; i < count; i++) {
+    vec.push_back(std::shared_ptr<arrow::Field>(fields[i]));
+  }
   auto schema = new Schema;
   schema->ptr = std::make_shared<arrow::Schema>(vec);
   return schema;
@@ -222,8 +222,17 @@ result_t array_builder_finish(void *vp) {
   delete builder;
 
   auto wrapper = new Array;
-  wrapper->array = array;
+  wrapper->ptr = array;
   return result_t{nullptr, wrapper};
+}
+
+int array_dtype(void *vp) {
+  if (vp == nullptr) {
+    return -1;
+  }
+
+  auto wrapper = (Array *)vp;
+  return wrapper->ptr->type_id();
 }
 
 int64_t array_length(void *vp) {
@@ -232,7 +241,7 @@ int64_t array_length(void *vp) {
   }
 
   auto wrapper = (Array *)vp;
-  return wrapper->array->length();
+  return wrapper->ptr->length();
 }
 
 int array_bool_at(void *vp, long long i) {
@@ -241,11 +250,11 @@ int array_bool_at(void *vp, long long i) {
     return -1;
   }
 
-  if (wrapper->array->type_id() != BOOL_DTYPE) {
+  if (wrapper->ptr->type_id() != BOOL_DTYPE) {
     return -1;
   }
 
-  auto arr = (arrow::BooleanArray *)(wrapper->array.get());
+  auto arr = (arrow::BooleanArray *)(wrapper->ptr.get());
   return arr->Value(i) ? 1 : 0;
 }
 
@@ -255,11 +264,11 @@ double array_float_at(void *vp, long long i) {
     return -1;
   }
 
-  if (wrapper->array->type_id() != FLOAT64_DTYPE) {
+  if (wrapper->ptr->type_id() != FLOAT64_DTYPE) {
     return -1;
   }
 
-  auto arr = (arrow::DoubleArray *)(wrapper->array.get());
+  auto arr = (arrow::DoubleArray *)(wrapper->ptr.get());
   return arr->Value(i);
 }
 
@@ -269,11 +278,11 @@ int64_t array_int_at(void *vp, long long i) {
     return -1;
   }
 
-  if (wrapper->array->type_id() != INTEGER64_DTYPE) {
+  if (wrapper->ptr->type_id() != INTEGER64_DTYPE) {
     return -1;
   }
 
-  auto arr = (arrow::Int64Array *)(wrapper->array.get());
+  auto arr = (arrow::Int64Array *)(wrapper->ptr.get());
   return arr->Value(i);
 }
 
@@ -283,11 +292,11 @@ const char *array_str_at(void *vp, long long i) {
     return nullptr;
   }
 
-  if (wrapper->array->type_id() != STRING_DTYPE) {
+  if (wrapper->ptr->type_id() != STRING_DTYPE) {
     return nullptr;
   }
 
-  auto arr = (arrow::StringArray *)(wrapper->array.get());
+  auto arr = (arrow::StringArray *)(wrapper->ptr.get());
   auto str = arr->GetString(i);
   return strdup(str.c_str());
 }
@@ -298,11 +307,11 @@ int64_t array_timestamp_at(void *vp, long long i) {
     return -1;
   }
 
-  if (wrapper->array->type_id() != TIMESTAMP_DTYPE) {
+  if (wrapper->ptr->type_id() != TIMESTAMP_DTYPE) {
     return -1;
   }
 
-  auto arr = (arrow::TimestampArray *)(wrapper->array.get());
+  auto arr = (arrow::TimestampArray *)(wrapper->ptr.get());
   return arr->Value(i);
 }
 
@@ -320,9 +329,9 @@ void *table_new(void *sp, void *ap, size_t ncols) {
   auto arrays = (Array**)ap;
 
   auto vec = std::vector<std::shared_ptr<arrow::Array>>();
-	for (size_t i = 0; i < ncols; i++) {
-		vec.push_back(arrays[i]->array);
-	}
+  for (size_t i = 0; i < ncols; i++) {
+    vec.push_back(arrays[i]->ptr);
+  }
 
   auto table = arrow::Table::Make(schema->ptr, vec);
   if (table == nullptr) {
@@ -330,18 +339,52 @@ void *table_new(void *sp, void *ap, size_t ncols) {
   }
 
   auto wrapper = new Table;
-  wrapper->table = table;
+  wrapper->ptr = table;
   return wrapper;
 }
 
 long long table_num_cols(void *vp) {
   auto wrapper = (Table *)vp;
-  return wrapper->table->num_columns();
+  return wrapper->ptr->num_columns();
 }
 
 long long table_num_rows(void *vp) {
   auto wrapper = (Table *)vp;
-  return wrapper->table->num_rows();
+  return wrapper->ptr->num_rows();
+}
+
+void *table_schema(void *vp) {
+  auto wrapper = (Table *)vp;
+  auto ptr = wrapper->ptr->schema();
+  if (ptr == NULL) {
+    return NULL;
+  }
+
+  auto schema = new Schema;
+  schema->ptr = ptr;
+  return schema;
+}
+
+void *table_column(void *vp, int i) {
+  auto wrapper = (Table *)vp;
+  auto arr = wrapper->ptr->column(i);
+  if (arr == NULL) {
+    return NULL;
+  }
+
+  auto array = new Array;
+  array->ptr = arr->chunk(0); // FIXME: Rethink Array
+  return array;
+}
+
+void *table_field(void *vp, int i) {
+  auto wrapper = (Table *)vp;
+  auto field = wrapper->ptr->field(i);
+  if (field == NULL) {
+    return NULL;
+  }
+
+  return field.get();
 }
 
 void table_free(void *vp) {
@@ -350,6 +393,15 @@ void table_free(void *vp) {
   }
 
   delete (Table *)vp;
+}
+
+void *table_slice(void *vp, int64_t offset, int64_t length) {
+  auto wrapper = (Table *)vp;
+  auto ptr = wrapper->ptr->Slice(offset, length);
+
+  auto table = new Table;
+  table->ptr = ptr;
+  return table;
 }
 
 void *meta_new() {
@@ -467,8 +519,8 @@ result_t plasma_write(void *cp, void *tp, char *oid) {
   }
 
   auto client = (plasma::PlasmaClient *)(cp);
-  auto ptr = (Table *)(tp);
-  auto table = ptr->table;
+  auto wrapper = (Table *)(tp);
+  auto table = wrapper->ptr;
 
   auto res = table_size(table);
   if (res.err != nullptr) {
@@ -552,9 +604,9 @@ result_t plasma_read(void *cp, char *oid, int64_t timeout_ms) {
   status = arrow::Table::FromRecordBatches(batches, &table);
   CARROW_RETURN_IF_ERROR(status);
 
-  auto ptr = new Table;
-  ptr->table = table;
-  return result_t{nullptr, ptr};
+  auto wrapper = new Table;
+  wrapper->ptr = table;
+  return result_t{nullptr, wrapper};
 }
 
 result_t plasma_release(void *cp, char *oid) {
