@@ -3,21 +3,18 @@ package csv
 import (
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestRead(t *testing.T) {
+	require := require.New(t)
 	file, err := os.Open("cart.csv")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(err, "open cart.csv")
 
 	table, err := Read(file)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(err, "read csv")
 
-	if table.NumRows() != 4 {
-		t.Fatal(table.NumRows())
-	}
-
+	require.Equal(4, table.NumCols(), "columns")
+	require.Equal(4, table.NumRows(), "rows")
 }
