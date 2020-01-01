@@ -179,9 +179,16 @@ result_t array_builder_new(int dtype) {
 }
 
 // TODO: Check for nulls in all append
-result_t array_builder_append_bool(void *vp, int value) {
+result_t array_builder_append_bool(void *vp, uint8_t value) {
   auto builder = (arrow::BooleanBuilder *)vp;
-  auto status = builder->Append(bool(value));
+  auto status = builder->Append(value);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
+}
+
+result_t array_builder_append_bools(void *vp, uint8_t *values, int64_t length) {
+  auto builder = (arrow::BooleanBuilder *)vp;
+  auto status = builder->AppendValues(values, length);
   CARROW_RETURN_IF_ERROR(status);
   return result_t{nullptr, nullptr};
 }
@@ -193,9 +200,23 @@ result_t array_builder_append_float(void *vp, double value) {
   return result_t{nullptr, nullptr};
 }
 
+result_t array_builder_append_floats(void *vp, double *values, int64_t length) {
+  auto builder = (arrow::DoubleBuilder *)vp;
+  auto status = builder->AppendValues(values, length);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
+}
+
 result_t array_builder_append_int(void *vp, int64_t value) {
   auto builder = (arrow::Int64Builder *)vp;
   auto status = builder->Append(value);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
+}
+
+result_t array_builder_append_ints(void *vp, int64_t *values, int64_t length) {
+  auto builder = (arrow::Int64Builder *)vp;
+  auto status = builder->AppendValues(values, length);
   CARROW_RETURN_IF_ERROR(status);
   return result_t{nullptr, nullptr};
 }
@@ -207,9 +228,24 @@ result_t array_builder_append_string(void *vp, char *cp, size_t length) {
   return result_t{nullptr, nullptr};
 }
 
-result_t array_builder_append_timestamp(void *vp, long long value) {
+result_t array_builder_append_strings(void *vp, char **cp, int64_t length) {
+  auto builder = (arrow::StringBuilder *)vp;
+  auto status = builder->AppendValues((const char **)cp, length);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
+}
+
+result_t array_builder_append_timestamp(void *vp, long value) {
   auto builder = (arrow::TimestampBuilder *)vp;
   auto status = builder->Append(value);
+  CARROW_RETURN_IF_ERROR(status);
+  return result_t{nullptr, nullptr};
+}
+
+result_t array_builder_append_timestamps(void *vp, long *values,
+                                         int64_t length) {
+  auto builder = (arrow::TimestampBuilder *)vp;
+  auto status = builder->AppendValues(values, length);
   CARROW_RETURN_IF_ERROR(status);
   return result_t{nullptr, nullptr};
 }

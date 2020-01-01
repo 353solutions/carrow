@@ -97,8 +97,13 @@ func (s *Schema) SetMetadata(m *Metadata) error {
 	return nil
 }
 
+type flusher interface {
+	flush() error
+}
+
 type builder struct {
 	ptr unsafe.Pointer
+	fl  flusher
 }
 
 func errFromResult(r C.result_t) error {
@@ -113,6 +118,10 @@ func errFromResult(r C.result_t) error {
 // Finish returns array from builder
 // You can't use the builder after calling Finish
 func (b *builder) Finish() (*Array, error) {
+	if err := b.fl.flush(); err != nil {
+		return nil, err
+	}
+
 	r := C.array_builder_finish(b.ptr)
 	if err := errFromResult(r); err != nil {
 		return nil, err
@@ -121,40 +130,111 @@ func (b *builder) Finish() (*Array, error) {
 	return &Array{r.ptr}, nil
 }
 
+// TODO: Templetaize Append & flush
 // Append appends a bool
 func (b *BoolArrayBuilder) Append(val bool) error {
-	var ival int
+	var ival C.uint8_t = 0
 	if val {
 		ival = 1
 	}
-	r := C.array_builder_append_bool(b.ptr, C.int(ival))
+	b.buffer[b.bufferIdx] = ival
+	b.bufferIdx++
+	if b.bufferIdx < bufferSize {
+		return nil
+	}
+	return b.flush()
+}
+
+func (b *BoolArrayBuilder) flush() error {
+	cSize := C.long(b.bufferIdx)
+	b.bufferIdx = 0
+	r := C.array_builder_append_bools(b.ptr, (*C.uint8_t)(&b.buffer[0]), cSize)
 	return errFromResult(r)
 }
 
-// Append appends an integer
+// Append appends an float
 func (b *Float64ArrayBuilder) Append(val float64) error {
-	r := C.array_builder_append_float(b.ptr, C.double(val))
+	b.buffer[b.bufferIdx] = C.double(val)
+	b.bufferIdx++
+	if b.bufferIdx < bufferSize {
+		return nil
+	}
+
+	return b.flush()
+}
+
+func (b *Float64ArrayBuilder) flush() error {
+	cSize := C.long(b.bufferIdx)
+	b.bufferIdx = 0
+	r := C.array_builder_append_floats(b.ptr, (*C.double)(&b.buffer[0]), cSize)
 	return errFromResult(r)
 }
 
 // Append appends an integer
 func (b *Integer64ArrayBuilder) Append(val int64) error {
-	r := C.array_builder_append_int(b.ptr, C.long(val))
+	b.buffer[b.bufferIdx] = C.long(val)
+	b.bufferIdx++
+	if b.bufferIdx < bufferSize {
+		return nil
+	}
+
+	return b.flush()
+}
+
+func (b *Integer64ArrayBuilder) flush() error {
+	cSize := C.long(b.bufferIdx)
+	b.bufferIdx = 0
+	r := C.array_builder_append_ints(b.ptr, (*C.long)(&b.buffer[0]), cSize)
 	return errFromResult(r)
+}
+
+// Finish creates the array from the builder
+func (b *Integer64ArrayBuilder) Finish() (*Array, error) {
+	if b.bufferIdx > 0 {
+		if err := b.flush(); err != nil {
+			return nil, err
+		}
+	}
+
+	return b.builder.Finish()
 }
 
 // Append appends a string
 func (b *StringArrayBuilder) Append(val string) error {
-	cStr := C.CString(val)
-	defer C.free(unsafe.Pointer(cStr))
-	length := C.ulong(len(val)) // len is in bytes
-	r := C.array_builder_append_string(b.ptr, cStr, length)
+	b.buffer[b.bufferIdx] = C.CString(val)
+	b.bufferIdx++
+	if b.bufferIdx < bufferSize {
+		return nil
+	}
+
+	return b.flush()
+}
+
+func (b *StringArrayBuilder) flush() error {
+	cSize := C.long(b.bufferIdx)
+	b.bufferIdx = 0
+	r := C.array_builder_append_strings(b.ptr, (**C.char)(&b.buffer[0]), cSize)
+	for _, cp := range b.buffer {
+		C.free(unsafe.Pointer(cp))
+	}
 	return errFromResult(r)
 }
 
 // Append appends a timestamp
 func (b *TimestampArrayBuilder) Append(val time.Time) error {
-	r := C.array_builder_append_timestamp(b.ptr, C.longlong(val.UnixNano()))
+	b.buffer[b.bufferIdx] = C.long(val.UnixNano())
+	b.bufferIdx++
+	if b.bufferIdx < bufferSize {
+		return nil
+	}
+
+	return b.flush()
+}
+
+func (b *TimestampArrayBuilder) flush() error {
+	cSize := C.long(b.bufferIdx)
+	b.bufferIdx = 0
+	r := C.array_builder_append_timestamps(b.ptr, (*C.long)(&b.buffer[0]), cSize)
 	return errFromResult(r)
 }
 
