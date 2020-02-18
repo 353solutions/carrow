@@ -2,6 +2,7 @@
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <plasma/client.h>
+#include <arrow/flight/api.h>
 
 #include <iostream>
 #include <sstream>
