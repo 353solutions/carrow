@@ -663,16 +663,20 @@ result_t plasma_release(void *cp, char *oid) {
   // Initialize server
   arrow::flight::Location location;
   // Listen to all interfaces on a free port
-  ARROW_CHECK_OK(arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location));
+  // ARROW_CHECK_OK(arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location));
+  arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location);
   arrow::flight::FlightServerOptions options(location);
 
   // Start the server
-  ARROW_CHECK_OK(server->Init(options));
+  // ARROW_CHECK_OK(server->Init(options));
+  server->Init(options);
   // Exit with a clean error code (0) on SIGTERM
-  ARROW_CHECK_OK(server->SetShutdownOnSignals({SIGTERM}));
+  // ARROW_CHECK_OK(server->SetShutdownOnSignals({SIGTERM}));
+  // server->SetShutdownOnSignals({SIGTERM});
 
   std::cout << "Server listening on localhost:" << server->port() << std::endl;
-  ARROW_CHECK_OK(server->Serve());
+  // ARROW_CHECK_OK(server->Serve());
+  server->Serve();
   return result_t{nullptr, nullptr};
  }
 
