@@ -24,7 +24,7 @@ clean:
 
 get-arrow:
 		git clone git://github.com/apache/arrow.git ../arrow
-		(cd ../arrow && git checkout apache-arrow-0.13.0)
+		(cd ../arrow && git checkout apache-arrow-0.16.0)
 
 build-docker:
 	docker build . -t carrow:builder
