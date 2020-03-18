@@ -12,7 +12,6 @@ struct Table {
   std::shared_ptr<arrow::Table> table;
 };
 
-
 class GoStream: virtual public arrow::io::InputStream {
 	long long id_;
 
@@ -64,14 +63,43 @@ class GoStream: virtual public arrow::io::InputStream {
 	}
 };
 
-read_res_t csv_read(long long id) {
+parse_options_t default_parse_options() {
+	auto arrow_opts = arrow::csv::ParseOptions::Defaults();
+
+	parse_options_t opts;
+	opts.delimiter = arrow_opts.delimiter;
+	opts.quoting = arrow_opts.quoting;
+	opts.quote_char = arrow_opts.quote_char;
+	opts.double_quote = arrow_opts.double_quote;
+	opts.escaping = arrow_opts.escaping;
+	opts.escape_char = arrow_opts.escape_char;
+	opts.newlines_in_values = arrow_opts.newlines_in_values;
+  opts.ignore_empty_lines = arrow_opts.ignore_empty_lines;
+	return opts;
+}
+
+arrow::csv::ParseOptions popts_from_c(parse_options_t p) {
+	auto opts = arrow::csv::ParseOptions::Defaults();
+	opts.delimiter = p.delimiter;
+	opts.quoting = p.quoting;
+	opts.quote_char = p.quote_char;
+	opts.double_quote = p.double_quote;
+	opts.escaping = p.escaping;
+	opts.escape_char = p.escape_char;
+	opts.newlines_in_values = p.newlines_in_values;
+  opts.ignore_empty_lines = p.ignore_empty_lines;
+
+	return opts;
+}
+
+read_res_t csv_read(long long id, parse_options_t po) {
 	read_res_t res = {NULL, NULL};
 	arrow::MemoryPool* pool = arrow::default_memory_pool();
 	std::shared_ptr<arrow::io::InputStream> input = std::make_shared<GoStream>(id);
 
 	// TODO: Allow user to pass options
 	auto read_options = arrow::csv::ReadOptions::Defaults();
-	auto parse_options = arrow::csv::ParseOptions::Defaults();
+	auto parse_options = popts_from_c(po);
 	auto convert_options = arrow::csv::ConvertOptions::Defaults();
 	
 	auto ptr = arrow::csv::TableReader::Make(pool, input, read_options,
@@ -93,3 +121,4 @@ read_res_t csv_read(long long id) {
 	res.table = tp;
 	return res;
 }
+

@@ -110,11 +110,11 @@ func istream_closed(id int) C.csv_res_t {
 }
 
 // Reads a CSV data from rdr, returns a *carrow.Table
-func Read(rdr io.Reader) (*carrow.Table, error) {
+func Read(rdr io.Reader, po *ParseOptions) (*carrow.Table, error) {
 	is := &inStream{rdr: rdr}
 	id := reg.Alloc(is)
 	defer reg.Release(id)
-	res := C.csv_read(C.longlong(id))
+	res := C.csv_read(C.longlong(id), po.c)
 	if res.err != nil {
 		// TODO: Free res.err?
 		return nil, fmt.Errorf(C.GoString(res.err))
@@ -122,4 +122,60 @@ func Read(rdr io.Reader) (*carrow.Table, error) {
 
 	ptr := unsafe.Pointer(res.table)
 	return carrow.NewTableFromPtr(ptr), nil
+}
+
+// ParseOptions used by ParseOption
+// used for not exposing C internals in the API
+type ParseOptions struct {
+	c C.parse_options_t
+}
+
+// NewParseOptions return parse options
+func NewParseOptions(opts ...ParseOption) *ParseOptions {
+	p := &ParseOptions{c: C.default_parse_options()}
+	for _, opt := range opts {
+		opt(p)
+	}
+	return p
+}
+
+// ParseOption is a parsing option
+type ParseOption func(*ParseOptions)
+
+func WithDelimiter(char byte) ParseOption {
+	return func(p *ParseOptions) {
+		p.c.delimiter = C.char(char)
+	}
+}
+
+func WithoutQuoting(p *ParseOptions) {
+	p.c.quoting = 0
+}
+
+func WithoutQuoteChar(char byte) ParseOption {
+	return func(p *ParseOptions) {
+		p.c.quote_char = C.char(char)
+	}
+}
+
+func WithoutDoubleQuote(p *ParseOptions) {
+	p.c.double_quote = 0
+}
+
+func WithEscaping(p *ParseOptions) {
+	p.c.escaping = 1
+}
+
+func WithoutEscapeChar(char byte) ParseOption {
+	return func(p *ParseOptions) {
+		p.c.escape_char = C.char(char)
+	}
+}
+
+func WithNewlinesInValues(p *ParseOptions) {
+	p.c.newlines_in_values = 1
+}
+
+func WithNoIgnoreEmptyLines(p *ParseOptions) {
+	p.c.ignore_empty_lines = 0
 }
