@@ -110,11 +110,20 @@ func istream_closed(id int) C.csv_res_t {
 }
 
 // Reads a CSV data from rdr, returns a *carrow.Table
-func Read(rdr io.Reader, po *ParseOptions) (*carrow.Table, error) {
+func Read(rdr io.Reader, ro *ReadOptions, po *ParseOptions) (*carrow.Table, error) {
 	is := &inStream{rdr: rdr}
 	id := reg.Alloc(is)
 	defer reg.Release(id)
-	res := C.csv_read(C.longlong(id), po.c)
+
+	if ro == nil {
+		ro = NewReadOptions()
+	}
+
+	if po == nil {
+		po = NewParseOptions()
+	}
+
+	res := C.csv_read(C.longlong(id), ro.c, po.c)
 	if res.err != nil {
 		// TODO: Free res.err?
 		return nil, fmt.Errorf(C.GoString(res.err))
@@ -178,4 +187,54 @@ func WithNewlinesInValues(p *ParseOptions) {
 
 func WithNoIgnoreEmptyLines(p *ParseOptions) {
 	p.c.ignore_empty_lines = 0
+}
+
+// ReadOptions used by ReadOption
+// used for not exposing C internals in the API
+type ReadOptions struct {
+	c C.read_options_t
+}
+
+// NewParseOptions return parse options
+func NewReadOptions(opts ...ReadOption) *ReadOptions {
+	r := &ReadOptions{c: C.default_read_options()}
+	for _, opt := range opts {
+		opt(r)
+	}
+	return r
+}
+
+// ReadOption is a parsing option
+type ReadOption func(*ReadOptions)
+
+func WithoutUseThreads(r *ReadOptions) {
+	r.c.use_threads = 0
+}
+
+func WithBlockSize(size int32) ReadOption {
+	return func(r *ReadOptions) {
+		r.c.block_size = C.int32_t(size)
+	}
+}
+
+func WithSkipRows(n int32) ReadOption {
+	return func(r *ReadOptions) {
+		r.c.skip_rows = C.int32_t(n)
+	}
+}
+
+func WithAuthgenerateColumnNames(r *ReadOptions) {
+	r.c.autogenerate_column_names = 1
+}
+
+func WithColumnsNames(columns []string) ReadOption {
+	return func(r *ReadOptions) {
+		buf := make([]*C.char, len(columns))
+		for i, col := range columns {
+			// Will be freed in the C level
+			buf[i] = C.CString(col)
+		}
+		r.c.column_names = (**C.char)(&buf[0])
+		r.c.column_name_count = C.int(len(columns))
+	}
 }

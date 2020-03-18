@@ -3,6 +3,7 @@
 #include <arrow/io/api.h>
 
 #include <memory>
+#include <cstdint>
 
 #include "_cgo_export.h"
 #include "csv.h"
@@ -92,13 +93,50 @@ arrow::csv::ParseOptions popts_from_c(parse_options_t p) {
 	return opts;
 }
 
-read_res_t csv_read(long long id, parse_options_t po) {
+
+read_options_t default_read_options() {
+	read_options_t opts;
+
+	auto arrow_opts = arrow::csv::ReadOptions::Defaults();
+	opts.use_threads = arrow_opts.use_threads;
+	opts.block_size = arrow_opts.block_size;
+	opts.skip_rows = arrow_opts.skip_rows;
+	opts.column_names = nullptr;
+	opts.column_name_count = 0;
+	opts.autogenerate_column_names = arrow_opts.autogenerate_column_names;
+
+	return opts;
+}
+
+arrow::csv::ReadOptions ropts_from_c(read_options_t p) {
+	auto opts = arrow::csv::ReadOptions::Defaults();
+	opts.use_threads = p.use_threads;
+	opts.block_size = p.block_size;
+	opts.skip_rows = p.skip_rows;
+
+	if ((p.column_name_count > 0) && (p.column_names != nullptr)) {
+		for (int i = 0; i < p.column_name_count; i++) {
+			opts.column_names.push_back(p.column_names[i]);
+		}
+		// Allocated in Go with C.CString
+		free(p.column_names);
+	}
+
+	opts.autogenerate_column_names = p.autogenerate_column_names;
+
+	return opts;
+}
+
+read_res_t csv_read(
+		long long id,
+		read_options_t ro,
+		parse_options_t po) {
 	read_res_t res = {NULL, NULL};
 	arrow::MemoryPool* pool = arrow::default_memory_pool();
 	std::shared_ptr<arrow::io::InputStream> input = std::make_shared<GoStream>(id);
 
 	// TODO: Allow user to pass options
-	auto read_options = arrow::csv::ReadOptions::Defaults();
+	auto read_options = ropts_from_c(ro);
 	auto parse_options = popts_from_c(po);
 	auto convert_options = arrow::csv::ConvertOptions::Defaults();
 	
@@ -121,4 +159,3 @@ read_res_t csv_read(long long id, parse_options_t po) {
 	res.table = tp;
 	return res;
 }
-

@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 typedef struct {
 	void *data;
 	unsigned long long size;
@@ -31,7 +33,18 @@ typedef struct {
 
 parse_options_t default_parse_options();
 
-read_res_t csv_read(long long id, parse_options_t po);
+typedef struct {
+	cbool use_threads;
+	int32_t block_size;
+  int32_t skip_rows;
+	char **column_names;
+	int column_name_count;
+  cbool autogenerate_column_names;
+} read_options_t;
+
+read_options_t default_read_options();
+
+read_res_t csv_read(long long id, read_options_t ro, parse_options_t po);
 
 #ifdef __cplusplus
 }

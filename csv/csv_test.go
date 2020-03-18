@@ -22,7 +22,8 @@ func TestRead(t *testing.T) {
 			require.NoErrorf(err, "open")
 
 			po := NewParseOptions(tc.opts...)
-			table, err := Read(file, po)
+			ro := NewReadOptions()
+			table, err := Read(file, ro, po)
 			require.NoError(err, "read csv")
 
 			require.Equal(4, table.NumCols(), "columns")
