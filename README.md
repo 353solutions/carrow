@@ -1,5 +1,7 @@
 # carrow - Go bindings to Apache Arrow via C++-API
 
+[![CircleCI](https://circleci.com/gh/353solutions/carrow.svg?style=svg)](https://circleci.com/gh/353solutions/carrow) [![godoc](https://godoc.org/github.com/353solutions/carrow?status.svg)](https://pkg.go.dev/github.com/353solutions/carrow?tab=doc)
+
 Access to [Arrow C++](https://arrow.apache.org/docs/cpp/) from Go.
 
 ## FAQ
