@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRandomID(t *testing.T) {
+func TestFlight(t *testing.T) {
 	require := require.New(t)
-	go Start(8080)
+	go Start()
 	require.True(true)
 	// oid, err := RandomID()
 	// require.NoError(err, "create id")
