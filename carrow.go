@@ -9,7 +9,7 @@ import (
 
 /*
 #cgo pkg-config: arrow plasma
-#cgo LDFLAGS: -lcarrow
+#cgo LDFLAGS: -lcarrow -larrow_flight
 #cgo linux LDFLAGS: -L./bindings/linux-x86_64
 #cgo CXXFLAGS: -I/src/arrow/cpp/src
 // FIXME: plasma headers
@@ -247,7 +247,6 @@ type Array struct {
 func (a *Array) DType() DType {
 	return DType(C.array_dtype(a.ptr))
 }
-
 
 // Length returns the length of the array
 func (a *Array) Length() int {

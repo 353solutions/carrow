@@ -13,7 +13,7 @@ import (
 
 /*
 #cgo pkg-config: arrow plasma
-#cgo LDFLAGS: -lcarrow
+#cgo LDFLAGS: -lcarrow -larrow_flight
 #cgo linux LDFLAGS: -L../bindings/linux-x86_64
 #cgo CFLAGS: -I..
 // FIXME: plasma headers
