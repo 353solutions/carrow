@@ -3,6 +3,7 @@
 #include <arrow/ipc/api.h>
 #include <plasma/client.h>
 #include <arrow/flight/api.h>
+#include <csignal>
 
 #include <iostream>
 #include <sstream>
@@ -658,12 +659,12 @@ result_t plasma_release(void *cp, char *oid) {
   return result_t{nullptr, nullptr};
 }
 
- result_t flight_server_start(int64_t port){
+ result_t flight_server_start(){
   std::unique_ptr<arrow::flight::FlightServerBase> server;
   // Initialize server
   arrow::flight::Location location;
   // Listen to all interfaces on a free port
-  // ARROW_CHECK_OK(arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location));
+  // arrow::flight::ARROW_CHECK_OK(arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location));
   arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location);
   arrow::flight::FlightServerOptions options(location);
 
@@ -672,7 +673,7 @@ result_t plasma_release(void *cp, char *oid) {
   server->Init(options);
   // Exit with a clean error code (0) on SIGTERM
   // ARROW_CHECK_OK(server->SetShutdownOnSignals({SIGTERM}));
-  // server->SetShutdownOnSignals({SIGTERM});
+  server->SetShutdownOnSignals({SIGTERM});
 
   std::cout << "Server listening on localhost:" << server->port() << std::endl;
   // ARROW_CHECK_OK(server->Serve());

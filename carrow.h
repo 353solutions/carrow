@@ -76,7 +76,7 @@ result_t plasma_read(void *cp, char *oid, int64_t timeout_ms);
 result_t plasma_release(void *cp, char *oid);
 result_t plasma_disconnect(void *vp);
 
-result_t flight_server_start(int64_t port);
+result_t flight_server_start();
 
 #ifdef __cplusplus
 }

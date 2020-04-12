@@ -12,6 +12,6 @@ package flight
 import "C"
 
 func Start() error {
-	C.flight_server_start(8080)
+	C.flight_server_start()
 	return nil
 }
