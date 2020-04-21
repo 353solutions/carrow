@@ -81,5 +81,5 @@ gdb-wtr: wtr
 artifact-linux-x86_64: libcarrow.a gen
 	$(info building artifact-linux-x86_64)
 	mkdir -p bindings/linux-x86_64
-	cp libcarrow.a ./bindings/linux-x86_64/libcarrow.a
+	mv libcarrow.a ./bindings/linux-x86_64/libcarrow.a
 	

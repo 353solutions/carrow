@@ -671,13 +671,13 @@ result_t plasma_release(void *cp, char *oid) {
   // Start the server
   // ARROW_CHECK_OK(server->Init(options));
   server->Init(options);
-  // Exit with a clean error code (0) on SIGTERM
-  // ARROW_CHECK_OK(server->SetShutdownOnSignals({SIGTERM}));
-  server->SetShutdownOnSignals({SIGTERM});
+  // // Exit with a clean error code (0) on SIGTERM
+  // // ARROW_CHECK_OK(server->SetShutdownOnSignals({SIGTERM}));
+  // server->SetShutdownOnSignals({SIGTERM});
 
-  std::cout << "Server listening on localhost:" << server->port() << std::endl;
-  // ARROW_CHECK_OK(server->Serve());
-  server->Serve();
+  // std::cout << "Server listening on localhost:" << server->port() << std::endl;
+  // // ARROW_CHECK_OK(server->Serve());
+  // server->Serve();
   return result_t{nullptr, nullptr};
  }
 
