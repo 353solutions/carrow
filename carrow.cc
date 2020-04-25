@@ -661,10 +661,11 @@ result_t plasma_release(void *cp, char *oid) {
 
  result_t flight_server_start(){
   std::unique_ptr<arrow::flight::FlightServerBase> server;
-  // Initialize server
+  server = std::unique_ptr<arrow::flight::FlightServerBase>(new arrow::flight::FlightServerBase());
+  // // Initialize server
   arrow::flight::Location location;
-  // Listen to all interfaces on a free port
-  // arrow::flight::ARROW_CHECK_OK(arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location));
+  // // Listen to all interfaces on a free port
+  // // arrow::flight::ARROW_CHECK_OK(arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location));
   arrow::flight::Location::ForGrpcTcp("0.0.0.0", 0, &location);
   arrow::flight::FlightServerOptions options(location);
 
@@ -673,11 +674,11 @@ result_t plasma_release(void *cp, char *oid) {
   server->Init(options);
   // // Exit with a clean error code (0) on SIGTERM
   // // ARROW_CHECK_OK(server->SetShutdownOnSignals({SIGTERM}));
-  // server->SetShutdownOnSignals({SIGTERM});
+  server->SetShutdownOnSignals({SIGTERM});
 
-  // std::cout << "Server listening on localhost:" << server->port() << std::endl;
+  std::cout << "Server listening on localhost:" << server->port() << std::endl;
   // // ARROW_CHECK_OK(server->Serve());
-  // server->Serve();
+  server->Serve();
   return result_t{nullptr, nullptr};
  }
 
