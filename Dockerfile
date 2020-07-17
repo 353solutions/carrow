@@ -11,9 +11,9 @@ RUN apt-get update && apt-get install -y \
 
 # Go installation
 RUN cd /tmp && \
-    wget https://dl.google.com/go/go1.14.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.14.linux-amd64.tar.gz && \
-    rm go1.14.linux-amd64.tar.gz
+    wget https://dl.google.com/go/go1.14.6.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.14.6.linux-amd64.tar.gz && \
+    rm go1.14.6.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 # Python bindings
@@ -25,7 +25,7 @@ ENV PATH="/miniconda/bin:${PATH}"
 RUN conda install -y \
     Cython \
     conda-forge::compilers \
-    conda-forge::pyarrow=0.16 \
+    conda-forge::pyarrow=0.17.1 \
     ipython \
     numpy \
     pkg-config
