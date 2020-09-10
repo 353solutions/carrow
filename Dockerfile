@@ -25,7 +25,7 @@ ENV PATH="/miniconda/bin:${PATH}"
 RUN conda install -y \
     Cython \
     conda-forge::compilers \
-    conda-forge::pyarrow=0.17.1 \
+    conda-forge::pyarrow=1.0.1 \
     ipython \
     numpy \
     pkg-config
