@@ -2,6 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/353solutions/carrow.svg?style=svg)](https://circleci.com/gh/353solutions/carrow) [![godoc](https://godoc.org/github.com/353solutions/carrow?status.svg)](https://pkg.go.dev/github.com/353solutions/carrow?tab=doc)
 
+**THIS PROJECT IS NO LONGER MAINTAINED, HAVE A LOOK [HERE](https://github.com/apache/arrow/tree/master/go)**
+
 Access to [Arrow C++](https://arrow.apache.org/docs/cpp/) from Go.
 
 ## FAQ
